@@ -1,0 +1,12 @@
+flatness_nav:
+  ros__parameters:
+    tag_family: tag36h11     # CHECK against the printed tags
+    tag_id: 3                # ID encoded in "Tag 3" (may differ from its label)
+    tag_size: 0.10           # metres, side of the black square. MEASURE and set.
+    use_tof: true            # needs tof_0:=true in the driver launch and a sensor fitted
+    camera_pitch_deg: 20.0   # camera is fixed to the chassis, measured about 17-23 deg below horizontal
+    use_tf_camera: false     # the URDF puts the camera on the arm; the real camera does not move with it
+    set_arm_pose: true
+    arm_x_m: 0.105
+    arm_z_m: 0.030           # the assignment's "Y = 30 mm" (the driver names the vertical axis z)
+    csv_path: motor_voltage_log.csv

@@ -1,0 +1,33 @@
+$ uname -srmo
+Linux 7.0.0-38-generic x86_64 GNU/Linux
+
+$ lsb_release -a
+Distributor ID:	Ubuntu
+Description:	Ubuntu 24.04.5 LTS
+Release:	24.04
+Codename:	noble
+
+$ python3 --version
+Python 3.12.3
+
+$ echo $ROS_DISTRO ; ros2 --help | head -1
+jazzy
+ros-jazzy-desktop-full 0.11.0-1noble.20261006.041807
+ros-jazzy-ros-gz 1.0.24-1noble.20261006.041805
+
+$ source ~/rm_setup.sh && python -c "import numpy ..."
+/home/ameen/rm_venv/bin/python
+numpy 1.26.4
+numpy                                1.26.4
+numpy-quaternion                     2024.0.13
+PyYAML                               6.0.1
+rm_libmedia_codec                    0.0.1
+robomaster                           0.1.2.0
+
+$ gz sim --versions
+Gazebo Sim, version 8.15.0
+Copyright (C) 2018 Open Source Robotics Foundation.
+
+$ df -h /
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda2       233G   30G  192G  14% /

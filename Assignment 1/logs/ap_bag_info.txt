@@ -1,0 +1,28 @@
+
+Files:             bag_ap_0.mcap
+Bag size:          3.9 MiB
+Storage id:        mcap
+ROS Distro:        jazzy
+Duration:          219.678514945s
+Start:             Oct 23 2026 14:47:06.365967829 (1792756026.365967829)
+End:               Oct 23 2026 14:50:46.044482774 (1792756246.044482774)
+Messages:          4333
+Topic information: Topic: /cmd_vel | Type: geometry_msgs/msg/Twist | Count: 39 | Serialization Format: cdr
+                   Topic: /joint_states | Type: sensor_msgs/msg/JointState | Count: 2179 | Serialization Format: cdr
+                   Topic: /odom | Type: nav_msgs/msg/Odometry | Count: 2115 | Serialization Format: cdr
+Service:           0
+Service information: 
+
+Files:             bag_ap_0.mcap
+Bag size:          5.2 MiB
+Storage id:        mcap
+ROS Distro:        jazzy
+Duration:          289.501243996s
+Start:             Oct 23 2026 15:47:07.777658130 (1792759627.777658130)
+End:               Oct 23 2026 15:51:57.278902126 (1792759917.278902126)
+Messages:          5804
+Topic information: Topic: /cmd_vel | Type: geometry_msgs/msg/Twist | Count: 81 | Serialization Format: cdr
+                   Topic: /joint_states | Type: sensor_msgs/msg/JointState | Count: 2896 | Serialization Format: cdr
+                   Topic: /odom | Type: nav_msgs/msg/Odometry | Count: 2827 | Serialization Format: cdr
+Service:           0
+Service information: 

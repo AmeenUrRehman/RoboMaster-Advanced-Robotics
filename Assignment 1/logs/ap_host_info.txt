@@ -1,0 +1,12 @@
+# captured 2026-10-23T14:44:36+03:00
+$ ip -br addr
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+wlp1s0           UP             192.168.2.32/24 fe80::b62f:2a42:7557:988d/64 
+$ ip route
+192.168.2.0/24 dev wlp1s0 proto kernel scope link src 192.168.2.32 metric 600 
+$ nmcli -f GENERAL.CONNECTION,IP4.ADDRESS,IP4.GATEWAY dev show wlp1s0
+GENERAL.CONNECTION:                     RMEP-21b442
+IP4.ADDRESS[1]:                         192.168.2.32/24
+IP4.GATEWAY:                            --
+$ iw dev wlp1s0 link
+/home/ameen/robomasters/assignment1/run_ap_all.sh: line 75: iw: command not found

@@ -1,0 +1,70 @@
+$ ros2 node list
+/joint_state_publisher
+/robomaster
+/robot_state_publisher
+
+$ ros2 topic list
+/arm_position
+/battery
+/camera/audio_level
+/camera/audio_opus
+/camera/audio_raw
+/camera/camera_info
+/camera/config
+/camera/image_color
+/camera/image_h264
+/cmd_arm
+/cmd_sound
+/cmd_vel
+/cmd_wheels
+/connected
+/gripper
+/imu
+/joint_states
+/joint_states_p
+/leds/color
+/leds/effect
+/odom
+/parameter_events
+/robot_description
+/rosout
+/servo_raw_state
+/state
+/target_arm_position
+/tf
+/tf_static
+
+$ ros2 topic info /cmd_vel -v
+Type: geometry_msgs/msg/Twist
+
+Publisher count: 0
+
+Subscription count: 1
+
+Node name: robomaster
+Node namespace: /
+Topic type: geometry_msgs/msg/Twist
+Topic type hash: RIHS01_9c45bf16fe0983d80e3cfe750d6835843d265a9a6c46bd2e609fcddde6fb8d2a
+Endpoint type: SUBSCRIPTION
+GID: 01.0f.f0.2e.68.39.f5.91.00.00.00.00.00.00.2d.04
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): UNKNOWN
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+
+$ ros2 topic hz /odom (8 s)
+average rate: 9.817
+	min: 0.004s max: 0.226s std dev: 0.05068s window: 51
+average rate: 9.815
+	min: 0.004s max: 0.226s std dev: 0.04639s window: 61
+
+$ ros2 topic hz /joint_states (8 s)
+average rate: 10.251
+	min: 0.019s max: 0.101s std dev: 0.01390s window: 33
+average rate: 10.187
+	min: 0.019s max: 0.101s std dev: 0.01209s window: 44
