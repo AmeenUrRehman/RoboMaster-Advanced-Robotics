@@ -41,6 +41,10 @@ ros2 launch rm_flatness_nav flatness_nav.launch.py tag_id:=3 tag_size:=0.15 csv_
 - Runs 1 and 2 never halted (before the fix). Three further flat-tag attempts failed: one never saw the tag, two had distances about 100x too large, which is what a tag size typed as 15 instead of 0.15 gives (`logs/flat_failed_attempts/`).
 - The stop comes from the planned trajectory: the tag leaves the camera image (below about 0.35 m upright, about 0.47 m flat) and the ToF returned no reading in range.
 
+## Camera and photos
+- `figures/fig_tag3_camera.png`: real robot-camera frame of the three flat tags, with the detector's result and an enlarged Tag 3 (`scripts/make_camera_figs.py`).
+- `figures/fig_run_photos.png` and `figures/photos/`: phone photographs of the flat-tag trials (start layout, after the stop).
+
 ## Deviations from the assignment text
 - Runs 3 and 4 used the tag upright; run 5 used it flat as specified. A single camera frame reads a flat 15 cm tag only out to about 0.6 to 0.7 m, although the node found it at 1.07 m in run 5.
 - Start distance 1.2 to 1.5 m instead of 1.5 to 1.8 m. Run 5 has no 20 Hz log.
