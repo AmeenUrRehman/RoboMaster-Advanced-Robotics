@@ -60,6 +60,8 @@ Implemented in \texttt{state\_machine.py} (pure logic, unit tested) and driven b
 \end{itemize}
 \textbf{Why align before translating.} The planned path is a straight cubic in the robot frame (boundary conditions $y(0)=y(T)=0$), so it assumes the tag lies straight ahead. If the robot drove while its heading was off by $\theta$, the open-loop path would end laterally displaced by about $d\sin\theta$ (more than 25\,cm at $d=1.5$\,m for $10^\circ$), and the tag would drift toward the edge of the image, where it is partly clipped or lost. Rotating first removes the heading error at zero translation, so the planned and executed paths coincide and the tag stays near the image centre.
 
+\textbf{Video stalls.} The run reported here used the driver's own decoder and the published topic \texttt{camera/image\_color}. The driver log contains no decoder or buffer errors (its only warning is that the optional FFmpeg transport package is not installed). The optional direct-capture mode of the node (\texttt{camera\_source:=cv2}) implements the recommended grab thread with a \texttt{time.sleep(0.010)} between \texttt{cap.grab()} calls; it was not needed and was not used.
+
 \subsection{(iii) Standoff braking}
 The brake is checked first in every control tick, before any other state logic: if the camera ground distance is $d\le0.20$\,m or the front ToF reads $\le0.20$\,m, the state becomes ARRIVED and $(v,\omega)=(0,0)$ is commanded immediately and latched.
 
@@ -67,14 +69,20 @@ The brake is checked first in every control tick, before any other state logic: 
 
 \subsection{(i) Flatness inversion}
 With the flat output $z(t)=[x(t),y(t)]^T$ and $\dot x=v\cos\theta$, $\dot y=v\sin\theta$:
-\[
+\begin{equation}
 v=\sqrt{\dot x^2+\dot y^2},\qquad
-\omega=\dot\theta=\frac{\dot x\ddot y-\dot y\ddot x}{\dot x^2+\dot y^2}.
-\]
+\omega=\dot\theta=\frac{\dot x\ddot y-\dot y\ddot x}{\dot x^2+\dot y^2}.\tag{1}
+\end{equation}
 At standstill ($\dot x^2+\dot y^2\to0$) the heading is undefined; the implementation returns $\omega=0$ there.
 
 \subsection{(ii) Cubic polynomial solution}
-For each component $z_j(t)=\alpha_0+\alpha_1t+\alpha_2t^2+\alpha_3t^3$ the boundary matrix equation is solved with \texttt{numpy.linalg.solve} (\texttt{solve\_flat\_polynomial}). For the given boundary values the closed form is
+For each component $z_j(t)=\alpha_0+\alpha_1t+\alpha_2t^2+\alpha_3t^3$ ($j\in\{x,y\}$) over the horizon $T$, the boundary conditions give the linear system
+\begin{equation}
+\begin{bmatrix}1&0&0&0\\0&1&0&0\\1&T&T^2&T^3\\0&1&2T&3T^2\end{bmatrix}
+\begin{bmatrix}\alpha_0^{[j]}\\\alpha_1^{[j]}\\\alpha_2^{[j]}\\\alpha_3^{[j]}\end{bmatrix}
+=\begin{bmatrix}z_j(0)\\\dot z_j(0)\\z_j(T)\\\dot z_j(T)\end{bmatrix},\tag{2}
+\end{equation}
+which is solved with \texttt{numpy.linalg.solve} (\texttt{solve\_flat\_polynomial}). For the given boundary values the closed form is
 \[
 \alpha_0=0,\quad \alpha_1=\dot z_0,\quad
 \alpha_2=\frac{3z_f-2\dot z_0T}{T^2},\quad
