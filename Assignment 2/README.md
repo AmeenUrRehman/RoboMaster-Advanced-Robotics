@@ -30,7 +30,7 @@ python -m pytest -q src/rm_flatness_nav/test        # 18 tests
 
 ## Run on the robot
 ```
-ros2 launch robomaster_ros ep.launch conn_type:=rndis      # or conn_type:=ap
+ros2 launch robomaster_ros ep.launch conn_type:=rndis
 ros2 launch rm_flatness_nav flatness_nav.launch.py tag_id:=3 tag_size:=0.15 csv_path:=$PWD/motor_voltage_log.csv
 ```
 `tag_size` is the measured side of the black square in metres. The run ends by itself after the robot halts.

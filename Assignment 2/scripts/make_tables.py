@@ -18,8 +18,8 @@ open('report/tab_coeff.tex', 'w').write('\n'.join(out) + '\n')
 # ---- per-run statistics of the real runs
 runs = [('1', '16:00', 'Wi-Fi AP', 'logs/archive_20261023_155809'), ('2', '16:04', 'Wi-Fi AP', 'logs/archive_20261023_183424'),
         ('3', '18:36', 'USB', 'logs/archive_20261023_191249'), ('4', '19:14', 'USB', 'logs/upright_run4'), ('5', '00:44', 'USB', 'logs/flat_run5')]
-out = [r'\begin{tabular}{@{}llllrrrrrl@{}}', r'\toprule',
-       r'Run & logged & link & final state & search (s) & first seen (m) & chase $d_0$ (m) & chase (s) & peak $v$ (m/s) & last seen (m)\\', r'\midrule']
+out = [r'\begin{tabular}{@{}lllrrrrrl@{}}', r'\toprule',
+       r'Run & logged & final state & search (s) & first seen (m) & chase $d_0$ (m) & chase (s) & peak $v$ (m/s) & last seen (m)\\', r'\midrule']
 for n, when, link, d in runs:
     import os
     L = list(csv.DictReader(open(f'{d}/motor_voltage_log.csv')))
@@ -32,7 +32,7 @@ for n, when, link, d in runs:
     chase = f'{(arr - ts[ch[0]]):.1f}' if (ch and arr) else '--'
     d0 = next((r['distance_m'] for r in L if r['state'] == 'CHASING' and r['distance_m']), '--')
     final = 'ARRIVED' if L[-1]['state'].startswith('ARRIVED') else 'SEARCHING (no halt)'
-    out.append(f"{n} & {when} & {link} & {final} & {first_non:.1f} & {det[0]['distance_m']} & {d0} & {chase} & {max(v):.3f} & {det[-1]['distance_m']}\\\\")
+    out.append(f"{n} & {when} & {final} & {first_non:.1f} & {det[0]['distance_m']} & {d0} & {chase} & {max(v):.3f} & {det[-1]['distance_m']}\\\\")
 out += [r'\bottomrule', r'\end{tabular}']
 open('report/tab_runs.tex', 'w').write('\n'.join(out) + '\n')
 print(open('report/tab_coeff.tex').read()); print(open('report/tab_runs.tex').read())
