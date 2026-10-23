@@ -35,13 +35,15 @@ ros2 launch rm_flatness_nav flatness_nav.launch.py tag_id:=3 tag_size:=0.15 csv_
 ```
 `tag_size` is the measured side of the black square in metres. The run ends by itself after the robot halts.
 
-## Measured result (Tag 3, `tag36h11`, 15 cm, upright, wired USB)
-- Search 11.4 s, align 2.5 s, chase 10.9 s from d0 = 1.28 m, peak speed 0.137 m/s (limit 0.16 m/s).
-- Final voltages V1 to V4 = 0.000 V at the halt; measured stop gap 20 cm.
-- The stop came from the planned trajectory: the upright tag left the camera image below about 0.35 m, and the ToF returned no reading in range.
+## Measured results (Tag 3, `tag36h11`, 15 cm, wired USB)
+- **Run 5 (final, flat tags):** the three printed tags lay flat (Tags 1 and 2 beside Tag 3). Start about 1.2 to 1.5 m (hand-measured range; camera first read 1.07 m to the tag centre), search 8.0 s, align 2.0 s, chase about 8.9 s, peak speed 0.136 m/s (1 Hz samples), final voltages V1 to V4 = 0.000 V, stop gap about 20 cm. Only the 1 Hz log exists (`logs/flat_run5/`); Table 1 and the main plot come from it.
+- **Run 4 (upright tag, 20 Hz log):** search 11.4 s, align 2.5 s, chase 10.9 s from d0 = 1.28 m, peak 0.137 m/s, stop gap 20 cm (`logs/upright_run4/`). Run 3 is similar (`logs/archive_20261023_191249/`).
+- Runs 1 and 2 never halted (before the fix). Three further flat-tag attempts failed: one never saw the tag, two had distances about 100x too large, which is what a tag size typed as 15 instead of 0.15 gives (`logs/flat_failed_attempts/`).
+- The stop comes from the planned trajectory: the tag leaves the camera image (below about 0.35 m upright, about 0.47 m flat) and the ToF returned no reading in range.
 
 ## Deviations from the assignment text
-- The tag stood upright facing the robot instead of lying flat (a flat 15 cm tag is a thin sliver for this camera and cannot be read beyond about 0.7 m).
+- Runs 3 and 4 used the tag upright; run 5 used it flat as specified. A single camera frame reads a flat 15 cm tag only out to about 0.6 to 0.7 m, although the node found it at 1.07 m in run 5.
+- Start distance 1.2 to 1.5 m instead of 1.5 to 1.8 m. Run 5 has no 20 Hz log.
 - The camera is fixed to the chassis (about 20 degrees downward); the arm pose (105 mm, 30 mm) does not change its tilt.
 
 ## Build the report

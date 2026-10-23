@@ -15,13 +15,15 @@ for d0 in (0.9, 1.0, 1.28, 1.5, 1.8):
 out += [r'\bottomrule', r'\end{tabular}']
 open('report/tab_coeff.tex', 'w').write('\n'.join(out) + '\n')
 
-# ---- per-run statistics of the four real runs
+# ---- per-run statistics of the real runs
 runs = [('1', '16:00', 'Wi-Fi AP', 'logs/archive_20261023_155809'), ('2', '16:04', 'Wi-Fi AP', 'logs/archive_20261023_183424'),
-        ('3', '18:36', 'USB', 'logs/archive_20261023_191249'), ('4', '19:14', 'USB', 'logs')]
+        ('3', '18:36', 'USB', 'logs/archive_20261023_191249'), ('4', '19:14', 'USB', 'logs/upright_run4'), ('5', '00:44', 'USB', 'logs/flat_run5')]
 out = [r'\begin{tabular}{@{}llllrrrrrl@{}}', r'\toprule',
        r'Run & logged & link & final state & search (s) & first seen (m) & chase $d_0$ (m) & chase (s) & peak $v$ (m/s) & last seen (m)\\', r'\midrule']
 for n, when, link, d in runs:
-    L = list(csv.DictReader(open(f'{d}/motor_voltage_log.csv'))); F = list(csv.DictReader(open(f'{d}/motor_voltage_fast.csv')))
+    import os
+    L = list(csv.DictReader(open(f'{d}/motor_voltage_log.csv')))
+    F = list(csv.DictReader(open(f'{d}/motor_voltage_fast.csv'))) if os.path.exists(f'{d}/motor_voltage_fast.csv') else L   # run 5: no 20 Hz log, 1 Hz rows used
     det = [r for r in L if r['distance_m']]
     ts = [float(r['t_s']) for r in F]; st = [r['state'].split(' ')[0] for r in F]; v = [float(r['v_mps']) for r in F]
     first_non = next((ts[i] for i, s in enumerate(st) if s != 'SEARCHING'), None)

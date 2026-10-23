@@ -30,7 +30,7 @@ term_shot(rd('logs/captures/camera_pose_015.txt'), 'ameen@ameen-G6: ~/ws  (camer
 term_shot(rd('logs/captures/sim_run.txt'), 'ameen@ameen-G6: ~/ws  (offline simulation, not hardware data)', f'{T}/sim.png', width_chars=118)
 term_shot(rd('logs/driver.log'), 'ros2 launch robomaster_ros ep.launch conn_type:=rndis', f'{T}/driver.png', width_chars=150, fontsize=5.3, line_h=0.1, head=12, tail=0)
 # console format of the node, generated from the real 1 Hz log (same f-string as nav_node.log_row)
-rows, _ = load('logs/motor_voltage_log.csv')
+rows, _ = load('logs/flat_run5/motor_voltage_log.csv')
 lines = ['$ ros2 launch rm_flatness_nav flatness_nav.launch.py tag_id:=3 tag_size:=0.15 csv_path:=$PWD/motor_voltage_log.csv',
          "[INFO] [flatness_nav]: Tag tag36h11 id=3 size=0.15 m. Table header: t(s) V1 V2 V3 V4 state. CSV -> .../motor_voltage_log.csv"]
 for r in rows:
@@ -88,10 +88,10 @@ ax.set_title('Why an upright tag was used', fontsize=10)
 fig.savefig('figures/fig_visibility.png', dpi=200, bbox_inches='tight'); plt.close(fig)
 
 # ------------------------------------------------------------ voltage components of the real run
-_, f = load('logs/motor_voltage_fast.csv'); t = f['t_s']
+_, f = load('logs/upright_run4/motor_voltage_fast.csv'); t = f['t_s']
 w1 = np.array([wheel_rates(v, w)[0] for v, w in zip(f['v_mps'], f['w_radps'])])
 emf = K_V * w1; ine = f['V1_V'] - emf
-ch = np.where(np.array([r['state'].startswith('CHASING') for r in load('logs/motor_voltage_fast.csv')[0]]))[0]
+ch = np.where(np.array([r['state'].startswith('CHASING') for r in load('logs/upright_run4/motor_voltage_fast.csv')[0]]))[0]
 lo = t[ch[0]] - 2.5
 fig, ax = plt.subplots(2, 1, figsize=(7.2, 5.0), sharex=True, constrained_layout=True)
 ax[0].plot(t, w1, color='#1c7ed6'); ax[0].set_ylabel('$\\omega_1$ (rad/s)')
