@@ -40,7 +40,7 @@ The robot's camera is fixed to its chassis and looks about 20 degrees down. Tags
   <br><em>Final run: forward speed v(t) and motor voltage V1(t) (1 Hz log).</em>
 </p>
 
-Assessment 1 also contains the NumPy 2 ABI failure reproduced for real, the mecanum inverse and forward kinematics with a numerical check, the ROS 2 TF tree, and a ROS 2 bag with strafing.
+Assessment 1 also reports odometry error against tape measurements (0.35 m, 2.4 % of the path, for the Wi-Fi run; 1.15 m, 29.9 %, for the USB run with strafing), the NumPy 2 ABI failure reproduced for real, the mecanum inverse and forward kinematics with a numerical check, the ROS 2 TF tree, and a ROS 2 bag with strafing.
 
 <p align="center">
   <img src="Assignment%201/figures/fig_mecanum_geometry.png" width="45%" alt="Mecanum wheel geometry">

@@ -50,7 +50,7 @@ python scripts/analyze_telemetry.py --rndis-csv logs/rndis_run.csv --ap-csv logs
 
 ## Status
 Done: environment, SDK script, wired and AP runs, latency analysis, ROS 2 driver over AP, TF tree, bag, kinematic derivation.
-Open: a ROS 2 run with lateral strafing and a tape-measured end position for the odometry error; demonstration video links.
+ROS 2 odometry error against tape measurements: 0.351 m (2.4 % of 14.86 m) for the Wi-Fi run and 1.146 m (29.9 % of 3.83 m) for the USB run with strafing. Demonstration video links are in the report.
 
 ## Build the report
 ```

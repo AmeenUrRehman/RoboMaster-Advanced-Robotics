@@ -344,10 +344,10 @@ In a second terminal:
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/cmd_vel
 \end{Verbatim}
 The node publishes \texttt{geometry\_msgs/Twist} on \texttt{/cmd\_vel}: \texttt{i}/\texttt{,} forward/backward, \texttt{j}/\texttt{l} yaw, \texttt{k} stop, and Shift plus \texttt{j}/\texttt{l} (capitals) lateral strafing; the speed steps up and down with the \texttt{q}/\texttt{z} family of keys (the maximum linear command in the log is 0.55\,m/s, i.e.\ $0.5\times1.1$). The recorded run lasted 289.5\,s with 81 \texttt{/cmd\_vel} messages (maximum $|v_x|=0.55$\,m/s, $|\omega_z|=1.0$\,rad/s), with roughly 21\,s of forward or backward driving and 40\,s of rotation. The path consists of straight legs joined by in-place turns (Figure~\ref{fig:odom}), and the net heading change is $+1447^\circ$ (about four turns).
-\textbf{No lateral strafing was commanded in this Wi-Fi run} ($\max|v_y|=0$ in the bag). A second, shorter run was therefore recorded \emph{over the USB link} (\texttt{conn\_type:=rndis}, bag \texttt{logs/bag\_usb}), with forward motion, Shift+J / Shift+L strafing and turning. It lasted 93.3\,s with 918 odometry samples (9.8\,Hz) and 46 \texttt{/cmd\_vel} messages; the largest commands were $|v_x|=0.5$\,m/s, $|v_y|=0.5$\,m/s and $|\omega_z|=1.0$\,rad/s. Odometry gives a path length of 6.39\,m, a net heading change of $-53.5^\circ$ and an end position of $(X,Y)=(-0.379,\,-0.117)$\,m in the start frame (Figure~\ref{fig:odomusb}). The tape-measured end position was not recorded for this run either, so the odometry error is still not quantified.
+\textbf{No lateral strafing was commanded in this Wi-Fi run} ($\max|v_y|=0$ in the bag). A second, shorter run was therefore recorded \emph{over the USB link} (\texttt{conn\_type:=rndis}, bag \texttt{logs/bag\_usb}), with forward motion, Shift+J / Shift+L strafing and turning. It lasted 68.3\,s with 644 odometry samples (9.4\,Hz) and 26 \texttt{/cmd\_vel} messages; the largest commands were $|v_x|=0.5$\,m/s, $|v_y|=0.5$\,m/s and $|\omega_z|=1.0$\,rad/s. Odometry gives a path length of 3.83\,m, a net heading change of $-40.5^\circ$ and an end position of $(X,Y)=(0.249,\,0.161)$\,m in the start frame. The tape-measured end position of this run was $(1.2,\ 0.8)$\,m, so the odometry error is $1.15$\,m, or $29.9\,\%$ of the path length (Figure~\ref{fig:odomusb}). This is much larger than for the Wi-Fi run below. It was not investigated further; wheel slip under strafing and rotation is the likely contributor (see the drift discussion below), and a repeat with a long straight leg would separate slip from heading error. An earlier 93\,s USB recording was replaced by this one and is kept in \texttt{logs/archive\_*}.
 \begin{figure}[H]\centering
 \includegraphics[width=0.62\linewidth]{../figures/usb/fig_odom.png}
-\caption{Odometry trajectory of the USB run with strafing (start frame, $x$ forward, $y$ left). No measured end position is available.}\label{fig:odomusb}
+\caption{Odometry trajectory of the USB run with strafing (start frame, $x$ forward, $y$ left). The red star is the tape-measured end position.}\label{fig:odomusb}
 \end{figure}
 
 \subsection{(iii) Telemetry acquisition}
@@ -381,11 +381,12 @@ Integrated path length & 14.86\,m\\
 Estimated end position (start frame) & $(X,Y)=(0.881,\ 0.447)$\,m\\
 Net heading change & $+1447^\circ$\\
 Largest sample-to-sample step & 0.13\,m (no jumps)\\
-Tape-measured end position & \todo{not measured for this run}\\
+Tape-measured end position & $(X,Y)=(1.2,\ 0.3)$\,m\\
+Endpoint error & 0.351\,m, i.e.\ 2.4\,\% of the path length\\
 \bottomrule
 \end{tabular}
 \end{center}
-\textbf{Endpoint comparison.} The estimated end position is given above; the error against the true position, in metres and as a percentage of the path length, can only be filled in from a tape measurement taken at the end of a run.
+\textbf{Endpoint comparison.} For this Wi-Fi run the tape measurement gave $(1.2,\ 0.3)$\,m (1.2\,m ahead of the start mark and 0.3\,m to its left) against an odometry estimate of $(0.881,\ 0.447)$\,m: an error of 0.351\,m, which is 2.4\,\% of the 14.86\,m path. The path here is almost all straight driving and turning in place (no strafing). For the USB run with strafing (Problem 3(ii)) the error was 1.15\,m, or 29.9\,\% of a 3.83\,m path. Both measurements are by hand to about a few centimetres, far less than these errors.
 
 \paragraph{Sources of odometry drift.} Position is the running integral
 \[
@@ -564,12 +565,12 @@ There is no direct \texttt{base\_link} $\to$ \texttt{arm\_base\_link} transform:
 System diagnostics (kernel, Python, ROS 2, NumPy) & done & Figures~\ref{fig:diag}, \ref{fig:install}, \ref{fig:env}\\
 NumPy ABI analysis and isolation method & done, reproduced & Figure~\ref{fig:np2}, Figure~\ref{fig:env}\\
 Wired and AP latency plots (telemetry $\Delta t$, ping RTT) & done & Section~\ref{sec:lat}\\
-Reconstructed odometry trajectory ($X$ vs $Y$) & done; error needs a tape measurement & Figure~\ref{fig:odom}\\
+Reconstructed odometry trajectory ($X$ vs $Y$) & done; error 0.35\,m (Wi-Fi run) and 1.15\,m (USB strafing run) & Figure~\ref{fig:odom}\\
 Table of topology comparison & done & Problem 4(i)\\
 Derivation of $\mathbf J_{IK}$, $\mathbf J_{FK}$ & done, verified & Problem 4(ii)\\
 TF tree and explanation & done & Problem 4(iii)\\
 \texttt{ep\_teleop\_sdk.py}, \texttt{rm\_setup.sh}, raw CSV logs & done & repository, Appendices A and B\\
-ROS 2 run with lateral strafing and measured end position & strafing run done over USB; \todo{tape-measured end position missing} & Problem 3(ii), 3(iv)\\
+ROS 2 run with lateral strafing and measured end position & done: strafing run over USB; measured end positions for both runs & Problem 3(ii), 3(iv)\\
 Video (a) SDK teleoperation, (b) ROS 2 teleoperation over AP & done & Section~\ref{sec:videos}\\
 \bottomrule
 \end{tabular}
@@ -581,7 +582,7 @@ Video (a) SDK teleoperation, (b) ROS 2 teleoperation over AP & done & Section~\r
   \item \textbf{Time resolution.} The telemetry is logged at 10\,Hz, so response delays have a resolution of 0.1\,s, and means of 0.16\,s and 0.19\,s should not be over-interpreted; the 0.30\,s versus 0.50\,s worst cases are the more reliable difference.
   \item \textbf{Wheel order.} The assumption that the SDK's ESC order is FR, FL, RL, RR was verified from the data (Table~\ref{tab:pattern}).
   \item \textbf{Nominal dimensions.} The wheel radius and chassis half-dimensions used in the numerical examples are the nominal EP values, not measured on this robot.
-  \item \textbf{Open items.} A ROS~2 run with lateral strafing, the tape-measured end position for the odometry error, and the two demonstration videos.
+  \item \textbf{Odometry error with strafing.} The error of the strafing run (29.9\,\% of its path) is large and was not investigated further. The strafing run was recorded over USB, not over Wi-Fi.
 \end{itemize}
 
 \section{Demonstration videos}\label{sec:videos}
