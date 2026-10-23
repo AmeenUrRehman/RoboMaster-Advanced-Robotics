@@ -3,7 +3,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{amsmath,amssymb,bm}
-\usepackage{xcolor,enumitem,titlesec,graphicx,booktabs,fancyvrb,float,caption,longtable,fancyhdr}
+\usepackage{xcolor,enumitem,titlesec,graphicx,booktabs,fancyvrb,float,caption,longtable,fancyhdr,array}
 \usepackage{tikz}\usetikzlibrary{arrows.meta,positioning}
 \usepackage[hidelinks]{hyperref}
 \definecolor{soft}{gray}{0.93}
@@ -86,6 +86,7 @@ The assignment names three targets, $T_1$, $T_2$ and $T_3$, without specifying a
 
 \subsection{Software architecture}
 \begin{figure}[H]\centering
+\resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[node distance=0.9cm and 1.1cm, >=Stealth, every node/.style={font=\footnotesize}]
   \tikzset{blk/.style={draw, rounded corners, minimum width=2.7cm, minimum height=0.9cm, align=center}, ext/.style={blk, fill=gray!15}}
   \node[ext] (cam) {\texttt{camera/image\_color}\\\texttt{camera/camera\_info}};
@@ -100,12 +101,12 @@ The assignment names three targets, $T_1$, $T_2$ and $T_3$, without specifying a
   \node[blk, left=of vm] (log) {1\,Hz table\\+ CSV (20\,Hz too)};
   \draw[->] (cam) -- (det); \draw[->] (det) -- (geo); \draw[->] (geo) -- (fsm); \draw[->] (tof) -| (fsm);
   \draw[<->] (fsm) -- (traj); \draw[->] (fsm) -- (cmd); \draw[->] (cmd) -- (wr); \draw[->] (wr) -- (vm); \draw[->] (vm) -- (log);
-\end{tikzpicture}
+\end{tikzpicture}}
 \caption{Data flow of \texttt{flatness\_nav}. Grey boxes are ROS interfaces of the \texttt{robomaster\_ros} driver.}
 \end{figure}
 
 \begin{center}\small
-\begin{tabular}{@{}ll p{8.4cm}@{}}
+\begin{tabular}{@{}ll >{\raggedright\arraybackslash}p{8.4cm}@{}}
 \toprule
 \textbf{File} & & \textbf{Role}\\
 \midrule
@@ -123,7 +124,7 @@ The control loop runs at 20\,Hz. The code is in the repository (see the link at 
 \subsection{Data provenance and run history}\label{sec:hist}
 Four real runs of the full system exist. They are listed because the two failures led directly to design changes. The columns are computed from the logs by \texttt{scripts/make\_tables.py}.
 \begin{table}[H]\centering\scriptsize
-\input{tab_runs.tex}
+\resizebox{\linewidth}{!}{\input{tab_runs.tex}}
 \caption*{\textbf{Run history.} The four real runs. ``First seen'' and ``last seen'' are the camera distances at the first and last detection that appear in the 1\,Hz log.}
 \end{table}
 \begin{itemize}
@@ -177,7 +178,7 @@ Four real runs of the full system exist. They are listed because the two failure
 \end{figure}
 
 \begin{center}\small
-\begin{tabular}{@{}lll@{}}
+\begin{tabular}{@{}ll>{\raggedright\arraybackslash}p{7.8cm}@{}}
 \toprule
 \textbf{Parameter} & \textbf{Value} & \textbf{Meaning}\\
 \midrule
@@ -266,7 +267,7 @@ It is evaluated in every control tick ($\Delta t=0.05$\,s) on the wheel rates co
 The node prints one table line per second and writes the same values to \texttt{motor\_voltage\_log.csv} (columns: \texttt{t\_s}, \texttt{V1\_V}..\texttt{V4\_V}, \texttt{state}, \texttt{v\_mps}, \texttt{w\_radps}, \texttt{distance\_m}, \texttt{bearing\_rad}, \texttt{tof\_m}, \texttt{w1}..\texttt{w4\_radps}); a 20\,Hz copy (\texttt{motor\_voltage\_fast.csv}) is used for the plots. When the state becomes ARRIVED the node waits three control ticks and then writes the last row at the true stop time, so that the voltages in that row are exactly zero.
 
 \begin{figure}[H]\centering
-\includegraphics[width=\linewidth]{../figures/term/node_table.png}
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{../figures/term/node_table.png}
 \caption{Console output of the node for run 4, rendered from \texttt{motor\_voltage\_log.csv} in the node's log format (the console text itself was not saved during the run; the CSV is the real data).}
 \end{figure}
 
@@ -296,11 +297,11 @@ The node prints one table line per second and writes the same values to \texttt{
 \section{Verification}
 \paragraph{Unit tests.} 18 tests cover the boundary conditions of Eq.~(2), the horizon formula and its 4\,s floor, zero turn rate and the speed limit of the straight trajectory, Eq.~(1) on a circle and at standstill, Eq.~(4) and Eq.~(5) values, every state transition (including the brake, loss before the chase, and continuing after loss during the chase), and the detector's recovery of range and bearing from rendered tags with the real camera intrinsics.
 \begin{figure}[H]\centering
-\includegraphics[width=\linewidth]{../figures/term/pytest.png}
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{../figures/term/pytest.png}
 \caption{Output of \texttt{pytest -v} (real, run on the host).}
 \end{figure}
 \begin{figure}[H]\centering
-\includegraphics[width=0.8\linewidth]{../figures/term/colcon.png}
+\includegraphics[width=0.8\linewidth,height=0.62\textheight,keepaspectratio]{../figures/term/colcon.png}
 \caption{The package builds with \texttt{colcon build --symlink-install}.}
 \end{figure}
 \paragraph{Offline simulation (not hardware data).} The same state machine, trajectory and voltage model were simulated against a point-robot model with a tag that becomes invisible inside a minimum range, to exercise cases that were not run on the robot (different starting headings). All three scenarios halt at the standoff.
@@ -309,7 +310,7 @@ The node prints one table line per second and writes the same values to \texttt{
 \caption{Simulation only: three starting headings.}
 \end{figure}
 \begin{figure}[H]\centering
-\includegraphics[width=\linewidth]{../figures/term/sim.png}
+\includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{../figures/term/sim.png}
 \caption{Output of \texttt{python -m rm\_flatness\_nav.sim} (simulation, not hardware data).}
 \end{figure}
 

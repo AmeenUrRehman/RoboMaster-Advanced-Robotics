@@ -35,7 +35,7 @@ def term_shot(text, title, out, width_chars=112, head=None, tail=None, fontsize=
     lines = text.rstrip('\n').split('\n')
     if head is not None and tail is not None and len(lines) > head + tail + 1:
         omitted = len(lines) - head - tail
-        lines = lines[:head] + [f'... {omitted} lines omitted ...'] + lines[-tail:]
+        lines = lines[:head] + [f"... {omitted} lines omitted ..."] + (lines[-tail:] if tail else [])
     lines = [l.replace('\t', '    ') for l in lines]
     lines = [l if len(l) <= width_chars else l[:width_chars - 1] + '…' for l in lines]
     w_in = 7.4
