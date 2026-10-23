@@ -1,0 +1,509 @@
+<title>RoboMaster Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800&display=swap">
+<style>
+/* Layout concept: a bright arcade-lab. Left: the arena where Robo lives. Right: big friendly controls and live "wheel power" meters.
+   Palette: sky background, ink navy text, electric blue (primary), sunny yellow (stars), mint (success), coral (alerts).
+   Type: Lilita One for titles, Nunito for everything else. */
+:root {
+  --bg: #e6f3ff; --panel: #ffffff; --ink: #12233d; --muted: #4d6283; --line: #c9dcf2;
+  --blue: #2f6bff; --blue-ink: #ffffff; --sun: #ffc83d; --mint: #12a97f; --coral: #ff5a5f; --violet: #7a4dff;
+  --floor-a: #f4f9ff; --floor-b: #e3effc; --grid: #cfe0f4; --shadow: 0 6px 0 rgba(18,35,61,.12);
+  --display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif; --body: "Nunito", "Trebuchet MS", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d1a2f; --panel: #162743; --ink: #eaf2ff; --muted: #a7bbdb; --line: #29426b;
+  --blue: #5b8bff; --blue-ink: #0b1630; --sun: #ffd25e; --mint: #2fd1a0; --coral: #ff7a7e; --violet: #9a7bff;
+  --floor-a: #1b3050; --floor-b: #17294a; --grid: #2a4673; --shadow: 0 6px 0 rgba(0,0,0,.35); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0d1a2f; --panel: #162743; --ink: #eaf2ff; --muted: #a7bbdb; --line: #29426b;
+  --blue: #5b8bff; --blue-ink: #0b1630; --sun: #ffd25e; --mint: #2fd1a0; --coral: #ff7a7e; --violet: #9a7bff;
+  --floor-a: #1b3050; --floor-b: #17294a; --grid: #2a4673; --shadow: 0 6px 0 rgba(0,0,0,.35); color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-weight: 700; font-size: 16px; line-height: 1.35;
+  padding-block: 14px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: .02em; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1; } h2 { font-size: 26px; } h3 { font-size: 20px; }
+p { margin: 0; } .muted { color: var(--muted); font-weight: 600; }
+header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand svg { flex: none; width: 64px; height: 64px; }
+nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.tab { font: inherit; font-family: var(--display); font-size: 18px; letter-spacing: .02em; border: 3px solid var(--ink); background: var(--panel); color: var(--ink);
+  border-radius: 14px; padding: 8px 14px; cursor: pointer; box-shadow: var(--shadow); min-height: 44px; }
+.tab[aria-selected="true"] { background: var(--blue); color: var(--blue-ink); }
+.tab:focus-visible, .btn:focus-visible, .seg button:focus-visible, .pad button:focus-visible, input:focus-visible { outline: 4px solid var(--sun); outline-offset: 2px; }
+.btn { font-family: var(--display); font-size: 22px; letter-spacing: .03em; border: 3px solid var(--ink); border-radius: 16px; padding: 10px 20px; cursor: pointer;
+  background: var(--sun); color: #12233d; box-shadow: var(--shadow); min-height: 50px; }
+.btn.go { background: var(--mint); color: #062a20; } .btn.alt { background: var(--panel); color: var(--ink); } .btn:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(18,35,61,.15); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+section.page { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 860px) { section.page { grid-template-columns: minmax(0, 1fr); } }
+section[hidden] { display: none !important; }
+.card { background: var(--panel); border: 3px solid var(--ink); border-radius: 20px; padding: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.arena-wrap { position: relative; }
+canvas { display: block; width: 100%; height: auto; border-radius: 14px; border: 3px solid var(--ink); background: var(--floor-a); touch-action: none; }
+.hud { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.chip { font-family: var(--display); font-size: 17px; border: 3px solid var(--ink); border-radius: 999px; padding: 4px 12px; background: var(--panel); display: inline-flex; gap: 8px; align-items: center; }
+.chip i { width: 14px; height: 14px; border-radius: 50%; background: var(--line); border: 2px solid var(--ink); display: inline-block; }
+.chip.on { background: var(--sun); color: #12233d; } .chip.on i { background: var(--coral); }
+.chip.ok { background: var(--mint); color: #062a20; }
+.seg { display: inline-flex; border: 3px solid var(--ink); border-radius: 14px; overflow: hidden; }
+.seg button { font-family: var(--display); font-size: 17px; border: 0; padding: 8px 14px; background: var(--panel); color: var(--ink); cursor: pointer; min-height: 44px; }
+.seg button + button { border-left: 3px solid var(--ink); } .seg button[aria-pressed="true"] { background: var(--blue); color: var(--blue-ink); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+label.lab { font-weight: 800; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+input[type=range] { width: 100%; accent-color: var(--blue); min-height: 32px; }
+.meters { display: flex; flex-direction: column; gap: 8px; }
+.meter { display: grid; grid-template-columns: 74px minmax(0, 1fr) 76px; gap: 8px; align-items: center; font-variant-numeric: tabular-nums; }
+.meter .name { font-family: var(--display); font-size: 16px; }
+.bar { position: relative; height: 22px; border: 3px solid var(--ink); border-radius: 999px; background: var(--floor-b); overflow: hidden; }
+.bar::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--ink); opacity: .5; }
+.bar b { position: absolute; top: 0; bottom: 0; background: var(--blue); border-radius: 999px; left: 50%; width: 0; }
+.bar b.neg { background: var(--coral); }
+.num { text-align: right; font-weight: 800; }
+.stars { display: flex; gap: 6px; } .stars svg { width: 40px; height: 40px; }
+.result { border: 3px dashed var(--ink); border-radius: 16px; padding: 12px; background: var(--floor-b); display: flex; flex-direction: column; gap: 8px; }
+.result[hidden] { display: none; }
+.pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 280px; }
+.pad button { font-family: var(--display); font-size: 22px; border: 3px solid var(--ink); border-radius: 14px; background: var(--panel); color: var(--ink); min-height: 54px; cursor: pointer; box-shadow: var(--shadow); touch-action: none; user-select: none; }
+.pad button:active, .pad button.held { background: var(--sun); color: #12233d; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-weight: 700; color: var(--muted); }
+.tagcard { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.step { border: 3px solid var(--ink); border-radius: 18px; padding: 12px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow); }
+.step .big { font-family: var(--display); font-size: 22px; }
+.facts { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.facts td { padding: 6px 4px; border-bottom: 2px solid var(--line); } .facts td:last-child { text-align: right; font-family: var(--display); font-size: 19px; }
+.lane { display: flex; flex-direction: column; gap: 6px; } .lane canvas { height: auto; }
+.note { font-size: 14px; color: var(--muted); font-weight: 600; }
+footer { text-align: center; color: var(--muted); font-weight: 600; font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="22" width="48" height="30" rx="9" fill="#2f6bff" stroke="#12233d" stroke-width="4"/><rect x="14" y="28" width="36" height="14" rx="6" fill="#e6f3ff" stroke="#12233d" stroke-width="3"/><circle cx="25" cy="35" r="4" fill="#12233d"/><circle cx="39" cy="35" r="4" fill="#12233d"/><rect x="29" y="8" width="6" height="14" fill="#12233d"/><circle cx="32" cy="8" r="5" fill="#ffc83d" stroke="#12233d" stroke-width="3"/><rect x="4" y="46" width="10" height="12" rx="3" fill="#12233d"/><rect x="50" y="46" width="10" height="12" rx="3" fill="#12233d"/></svg>
+      <div><h1>RoboMaster Quest</h1><p class="muted">Meet Robo. Drive it, hide the magic tag, and watch it think!</p></div>
+    </div>
+    <nav role="tablist" aria-label="Missions">
+      <button class="tab" role="tab" data-tab="drive" aria-selected="true">1 Drive Robo</button>
+      <button class="tab" role="tab" data-tab="find" aria-selected="false">2 Find the Tag</button>
+      <button class="tab" role="tab" data-tab="race" aria-selected="false">3 Cable vs Wi-Fi</button>
+      <button class="tab" role="tab" data-tab="think" aria-selected="false">How Robo thinks</button>
+      <button class="tab" id="soundBtn" aria-pressed="true" title="Sound on or off">Sound on</button>
+    </nav>
+  </header>
+
+  <!-- ============ MISSION 1: DRIVE ============ -->
+  <section class="page" id="tab-drive">
+    <div class="card">
+      <div class="hud"><span class="chip">Stars <b id="dScore">0</b> / 8</span><span class="chip">Time <b id="dTime">30</b> s</span><span class="chip">Message delay <b id="dLag">0</b> ms</span></div>
+      <div class="arena-wrap"><canvas id="cDrive" width="900" height="600" aria-label="Arena: drive Robo to collect the stars"></canvas></div>
+      <p class="note">Keys: W S go forward and back, A D slide sideways, Q E turn. Space stops. On a phone, hold the big buttons.</p>
+    </div>
+    <div class="card">
+      <h2>Collect the stars</h2>
+      <p class="muted">Robo has mecanum wheels, so it can slide sideways like a crab!</p>
+      <div class="row"><button class="btn go" id="dStart">Start (30 s)</button><button class="btn alt" id="dStop">Stop Robo</button></div>
+      <div><p style="font-family:var(--display);font-size:19px;margin-bottom:6px">How is Robo connected?</p>
+        <div class="seg" id="dConn"><button data-c="usb" aria-pressed="true">Cable (USB)</button><button data-c="wifi" aria-pressed="false">Wi-Fi</button></div></div>
+      <label class="lab">Lag magnifier: <span id="dAmpTxt">1x (real size)</span><input type="range" id="dAmp" min="1" max="12" step="1" value="1"></label>
+      <p class="note">Real Wi-Fi delays are tiny but they jump around. Turn the magnifier up to feel what a bumpy connection does to driving.</p>
+      <div class="pad" id="dPad" aria-label="Touch controls">
+        <button data-k="q">Q &#8630;</button><button data-k="w">W &#9650;</button><button data-k="e">E &#8631;</button>
+        <button data-k="a">A &#9664;</button><button data-k="s">S &#9660;</button><button data-k="d">D &#9654;</button>
+      </div>
+      <div class="result" id="dResult" hidden><h3 id="dResTitle"></h3><p id="dResText" class="muted"></p></div>
+    </div>
+  </section>
+
+  <!-- ============ MISSION 2: FIND THE TAG ============ -->
+  <section class="page" id="tab-find" hidden>
+    <div class="card">
+      <div class="hud" id="fStates">
+        <span class="chip" data-s="SEARCHING"><i></i>Search</span><span class="chip" data-s="ALIGNING"><i></i>Line up</span>
+        <span class="chip" data-s="CHASING"><i></i>Chase</span><span class="chip" data-s="ARRIVED"><i></i>Stop</span>
+        <span class="chip">Distance <b id="fDist">--</b></span>
+      </div>
+      <div class="arena-wrap"><canvas id="cFind" width="900" height="600" aria-label="Arena: drag the tags, then press GO"></canvas></div>
+      <div class="legend"><span>Drag the tags to move them.</span><span>Robo only follows the <b>square code (T3)</b>.</span><span>The triangle and circle are decoys.</span></div>
+    </div>
+    <div class="card">
+      <h2>Hide the tag. Press GO.</h2>
+      <p class="muted">Robo turns to look, lines up, rolls forward, and stops 20 cm from the tag.</p>
+      <div class="row"><button class="btn go" id="fGo">GO!</button><button class="btn alt" id="fReset">Reset</button><button class="btn alt" id="fRand">Surprise me</button></div>
+      <label class="lab">Robo starts facing: <span id="fHeadTxt">70 degrees</span><input type="range" id="fHead" min="-180" max="180" step="5" value="70"></label>
+      <div><p style="font-family:var(--display);font-size:19px;margin-bottom:6px">Game speed</p>
+        <div class="seg" id="fSpeed"><button data-v="1" aria-pressed="false">x1</button><button data-v="2" aria-pressed="true">x2</button><button data-v="4" aria-pressed="false">x4</button></div></div>
+      <div class="meters" aria-label="Power to the four wheel motors">
+        <p style="font-family:var(--display);font-size:19px">Wheel power (volts)</p>
+        <div class="meter"><span class="name">Front right</span><div class="bar"><b id="vb0"></b></div><span class="num" id="vn0">0.000</span></div>
+        <div class="meter"><span class="name">Front left</span><div class="bar"><b id="vb1"></b></div><span class="num" id="vn1">0.000</span></div>
+        <div class="meter"><span class="name">Rear left</span><div class="bar"><b id="vb2"></b></div><span class="num" id="vn2">0.000</span></div>
+        <div class="meter"><span class="name">Rear right</span><div class="bar"><b id="vb3"></b></div><span class="num" id="vn3">0.000</span></div>
+      </div>
+      <canvas id="cGraph" width="600" height="190" aria-label="Speed and wheel power over time"></canvas>
+      <div class="legend"><span style="color:var(--mint)">&#9632; speed (m/s)</span><span style="color:var(--blue)">&#9632; wheel power</span></div>
+      <div class="result" id="fResult" hidden>
+        <div class="stars" id="fStars"></div><h3 id="fResTitle"></h3><p id="fResText" class="muted"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MISSION 3: CABLE VS WI-FI ============ -->
+  <section class="page" id="tab-race" hidden>
+    <div class="card">
+      <h2>Message race</h2>
+      <p class="muted">Robo reports its wheel speeds 10 times every second. Each message is a dot. Watch how they arrive.</p>
+      <div class="lane"><p style="font-family:var(--display)">Cable (USB)</p><canvas id="cLaneA" width="900" height="120"></canvas></div>
+      <div class="lane"><p style="font-family:var(--display)">Wi-Fi</p><canvas id="cLaneB" width="900" height="120"></canvas></div>
+      <div class="row"><button class="btn go" id="rRace">Send 40 messages</button><span class="chip" id="rStatA">Cable: ready</span><span class="chip" id="rStatB">Wi-Fi: ready</span></div>
+      <p class="note">The game draws random delays that copy the shape of the measured ones (small most of the time, with rare big jumps). Messages cannot overtake each other, so after a jump they arrive in a bunch.</p>
+    </div>
+    <div class="card">
+      <h2>What the real robot measured</h2>
+      <table class="facts">
+        <tr><td>Cable: average ping</td><td>0.45 ms</td></tr><tr><td>Wi-Fi: average ping</td><td>28.3 ms</td></tr>
+        <tr><td>Wi-Fi: slowest ping</td><td>152 ms</td></tr><tr><td>Cable: gap between messages</td><td>102 ms</td></tr>
+        <tr><td>Wi-Fi: gap between messages</td><td>120 +/- 52 ms</td></tr>
+      </table>
+      <p class="muted">The cable is faster and steadier. Wi-Fi is wireless, so Robo can roam, but messages can arrive late and in bunches.</p>
+    </div>
+  </section>
+
+  <!-- ============ HOW ROBO THINKS ============ -->
+  <section class="page" id="tab-think" hidden style="grid-template-columns:minmax(0,1fr)">
+    <div class="card">
+      <h2>Four steps, one brain</h2>
+      <div class="steps">
+        <div class="step"><span class="big">1 Search</span><p>No tag in sight? Robo spins slowly on the spot and looks around. If it saw the tag last on the left, it turns left.</p></div>
+        <div class="step"><span class="big">2 Line up</span><p>Robo sees the tag. It turns until the tag is in the middle of its camera, then waits a moment to be sure.</p></div>
+        <div class="step"><span class="big">3 Chase</span><p>Robo follows a smooth speed plan: start gently, speed up, slow down gently. Never faster than 0.16 metres per second.</p></div>
+        <div class="step"><span class="big">4 Stop</span><p>Robo stops 20 centimetres from the tag. All four wheel motors go to exactly zero volts.</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>The magic code</h2>
+      <div class="tagcard"><canvas id="cTag" width="240" height="240" style="width:180px;height:180px" aria-label="The square code, tag 3"></canvas>
+        <div style="flex:1;min-width:220px"><p>Robo's camera reads this black and white square. It is like a barcode that says <b>"I am number 3"</b>. The triangle and the circle in the game are decoys: Robo ignores them.</p>
+        <p class="note" style="margin-top:6px">The real tag family is called AprilTag (tag36h11). Tag 3 is printed 15 cm wide.</p></div></div>
+    </div>
+    <div class="card">
+      <h2>The speed plan</h2>
+      <label class="lab">Distance to the tag when the chase starts: <span id="tDtxt">1.30 m</span><input type="range" id="tD" min="0.8" max="1.8" step="0.05" value="1.3"></label>
+      <canvas id="cPlan" width="900" height="300" aria-label="Planned speed over time"></canvas>
+      <p class="muted" id="tPlanTxt"></p>
+      <p class="note">The plan is a cubic curve (a smooth polynomial). The chase time is T = 1.6 x (distance - 0.20) / 0.16, with at least 4 seconds. That keeps the top speed the same, 0.137 m/s, for every distance.</p>
+    </div>
+  </section>
+
+  <footer>A school-visit game based on a real RoboMaster EP project (SCE 672, KFUPM). The numbers come from real robot logs; the game itself is a simulation.</footer>
+</div>
+
+<script>
+/* ======================= LOGIC (pure, no drawing) ======================= */
+const Logic = (() => {
+  const P = { lost: 0.45, search: 0.30, alignTol: 0.18, realign: 0.30, settle: 0.30, alignGain: 0.8, alignMin: 0.12, alignMax: 0.40,
+              chaseGain: 0.8, chaseMax: 0.40, brake: 0.20, vmax: 0.16, blind: true, blindMax: 1.8, v0: 0.06 };
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+  const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+  function horizon(d0) { return Math.max(4.0, 1.6 * (d0 - 0.20) / P.vmax); }
+  function makeTraj(d0) {
+    const T = horizon(d0), zf = Math.max(d0 - 0.20, 0), a2 = (3 * zf - 2 * P.v0 * T) / (T * T), a3 = (P.v0 * T - 2 * zf) / (T * T * T);
+    return { T, zf, a2, a3, v(t) { t = clamp(t, 0, T); return Math.max(0, P.v0 + 2 * a2 * t + 3 * a3 * t * t); }, x(t) { t = clamp(t, 0, T); return P.v0 * t + a2 * t * t + a3 * t * t * t; } };
+  }
+  function makeFSM() {
+    const f = { state: 'SEARCHING', lastSeen: null, lastDir: 1, centeredSince: null, traj: null, t0: 0, lastDist: Infinity, reason: '' };
+    function chase(o) {
+      const t = o.now - f.t0;
+      if (t >= f.traj.T) { f.state = 'ARRIVED'; f.reason = o.visible ? 'trajectory end' : 'trajectory end, tag out of view'; f.traj = null; return [0, 0]; }
+      let w = 0; if (o.visible) w += P.chaseGain * o.bearing;
+      return [Math.min(f.traj.v(t), P.vmax), clamp(w, -P.chaseMax, P.chaseMax)];
+    }
+    f.update = o => {
+      if (f.state === 'ARRIVED') return [0, 0];
+      if (o.visible) { f.lastSeen = o.now; f.lastDist = o.distance; if (Math.abs(o.bearing) > 1e-3) f.lastDir = o.bearing > 0 ? 1 : -1; }
+      if (o.visible && o.distance <= P.brake) { f.state = 'ARRIVED'; f.reason = 'camera brake'; f.traj = null; return [0, 0]; }
+      const lost = f.lastSeen === null || (o.now - f.lastSeen) > P.lost;
+      if (lost && P.blind && f.state === 'CHASING' && f.traj && f.lastDist <= P.blindMax) return chase(o);
+      if (lost) { if (f.state !== 'SEARCHING') { f.state = 'SEARCHING'; f.traj = null; f.centeredSince = null; } return [0, P.search * f.lastDir]; }
+      if (f.state === 'SEARCHING') { f.state = 'ALIGNING'; f.centeredSince = null; }
+      if (f.state === 'ALIGNING') {
+        if (!o.visible) return [0, 0];
+        if (Math.abs(o.bearing) <= P.alignTol) {
+          if (f.centeredSince === null) f.centeredSince = o.now;
+          if (o.now - f.centeredSince >= P.settle) { f.traj = makeTraj(o.distance); f.t0 = o.now; f.state = 'CHASING'; return chase(o); }
+          return [0, 0];
+        }
+        f.centeredSince = null;
+        let w = clamp(P.alignGain * o.bearing, -P.alignMax, P.alignMax);
+        if (Math.abs(w) < P.alignMin) w = P.alignMin * (w >= 0 ? 1 : -1);
+        return [0, w];
+      }
+      if (o.visible && Math.abs(o.bearing) > P.realign) { f.state = 'ALIGNING'; f.traj = null; f.centeredSince = null; return [0, 0]; }
+      return chase(o);
+    };
+    return f;
+  }
+  // wheel rates (Eq. 4) and armature voltages (Eq. 5), same constants as the real robot code
+  const R = 0.05, LC = 0.20, KV = 0.38, KA = 0.06;
+  function wheels(v, w) { const a = (v + LC * w) / R, b = (v - LC * w) / R; return [a, b, b, a]; }   // FR, FL, RL, RR
+  function makeVolt() { let prev = null; return (om, dt) => { const out = om.map((w, i) => KV * w + (prev ? KA * (w - prev[i]) / dt : 0)); prev = om.slice(); return out; }; }
+  // random numbers
+  function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  // one-way message delay in seconds, shaped like the measured ones (cable: tiny; Wi-Fi: mostly small, rare big jumps)
+  function delay(kind) {
+    if (kind === 'usb') return Math.max(0.0001, 0.00045 + 0.0002 * gauss());
+    const r = Math.random();
+    if (r < 0.78) return 0.005 + (-Math.log(1 - Math.random())) * 0.008;
+    if (r < 0.95) return 0.04 + Math.random() * 0.08;
+    return 0.12 + Math.random() * 0.14;
+  }
+  return { P, clamp, wrap, horizon, makeTraj, makeFSM, wheels, makeVolt, gauss, delay };
+})();
+
+/* ======================= SHARED HELPERS ======================= */
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const WORLD = { w: 3.0, h: 2.0 };
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let soundOn = true, AC = null;
+function beep(freq, dur = 0.12, type = 'sine', vol = 0.06, when = 0) {
+  if (!soundOn) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + when;
+    o.type = type; o.frequency.value = freq; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + dur + 0.02);
+  } catch (e) { /* sound is optional */ }
+}
+const jingle = () => [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.16, 'triangle', 0.07, i * 0.11));
+function fitCanvas(c) { const r = c.getBoundingClientRect(); const k = Math.min(2, window.devicePixelRatio || 1); const w = Math.max(300, Math.round(r.width * k)); if (c.width !== w) { c.height = Math.round(w * c.dataset.ar || w * (c.height / c.width)); c.width = w; } }
+function arena(c) { const s = c.width / WORLD.w; return { ctx: c.getContext('2d'), s, X: x => x * s, Y: y => (WORLD.h - y) * s }; }
+function drawFloor(A) {
+  const { ctx, s } = A; const c = ctx.canvas;
+  ctx.fillStyle = css('--floor-a'); ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = css('--floor-b');
+  for (let i = 0; i < 12; i++) for (let j = 0; j < 8; j++) if ((i + j) % 2 === 0) ctx.fillRect(i * 0.25 * s, j * 0.25 * s, 0.25 * s, 0.25 * s);
+  ctx.strokeStyle = css('--grid'); ctx.lineWidth = Math.max(1, s * 0.004);
+  for (let m = 0; m <= 3; m++) { ctx.beginPath(); ctx.moveTo(m * s, 0); ctx.lineTo(m * s, c.height); ctx.stroke(); }
+  for (let m = 0; m <= 2; m++) { ctx.beginPath(); ctx.moveTo(0, m * s); ctx.lineTo(c.width, m * s); ctx.stroke(); }
+  ctx.fillStyle = css('--muted'); ctx.font = `700 ${Math.round(s * 0.05)}px Nunito, sans-serif`;
+  [1, 2].forEach(m => ctx.fillText(m + ' m', m * s + 6, c.height - 8));
+}
+function drawRobot(A, r, glow) {
+  const { ctx, s } = A; ctx.save(); ctx.translate(A.X(r.x), A.Y(r.y)); ctx.rotate(-r.th);
+  const L = 0.26 * s, Wd = 0.20 * s;
+  if (glow) { ctx.fillStyle = 'rgba(255,200,61,.35)'; ctx.beginPath(); ctx.arc(0, 0, 0.26 * s, 0, 7); ctx.fill(); }
+  ctx.fillStyle = css('--ink');
+  [[-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([a, b]) => ctx.fillRect(a * 0.085 * s - 0.035 * s, b * 0.115 * s - 0.018 * s, 0.07 * s, 0.036 * s));
+  ctx.fillStyle = css('--blue'); ctx.strokeStyle = css('--ink'); ctx.lineWidth = Math.max(2, s * 0.012);
+  ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-L / 2, -Wd / 2, L, Wd, 0.04 * s); else ctx.rect(-L / 2, -Wd / 2, L, Wd); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = css('--sun'); ctx.fillRect(L / 2, -0.035 * s, 0.06 * s, 0.07 * s); ctx.strokeRect(L / 2, -0.035 * s, 0.06 * s, 0.07 * s);
+  ctx.fillStyle = css('--panel'); ctx.beginPath(); ctx.arc(0.03 * s, -0.045 * s, 0.022 * s, 0, 7); ctx.arc(0.03 * s, 0.045 * s, 0.022 * s, 0, 7); ctx.fill();
+  ctx.restore();
+}
+const TAG3 = (() => { // AprilTag tag36h11 ID 3, 8x8 modules (1 = black); same grid as the printed tag
+  const rows = ['11111111', '11110011', '11011001', '10110101', '10001101', '10001111', '10110001', '11111111'];
+  return rows.map(r => r.split('').map(Number));
+})();
+function drawTag3(ctx, cx, cy, side) {
+  const c = side / 8, x0 = cx - side / 2, y0 = cy - side / 2;
+  ctx.fillStyle = '#fff'; ctx.fillRect(x0 - c, y0 - c, side + 2 * c, side + 2 * c);
+  ctx.fillStyle = '#000'; TAG3.forEach((row, j) => row.forEach((b, i) => { if (b) ctx.fillRect(x0 + i * c, y0 + j * c, c + 0.5, c + 0.5); }));
+}
+function drawTriangle(ctx, cx, cy, r) { ctx.fillStyle = '#ffd9a8'; ctx.strokeStyle = '#c76a00'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r * 0.95, cy + r * 0.7); ctx.lineTo(cx - r * 0.95, cy + r * 0.7); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+function drawCircle(ctx, cx, cy, r) { ctx.fillStyle = '#cfe6ff'; ctx.strokeStyle = '#1c6fd1'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill(); ctx.stroke(); }
+function label(ctx, txt, x, y, s) { ctx.font = `800 ${Math.round(s * 0.06)}px "Lilita One", sans-serif`; ctx.textAlign = 'center'; ctx.lineWidth = 5; ctx.strokeStyle = css('--panel'); ctx.strokeText(txt, x, y); ctx.fillStyle = css('--ink'); ctx.fillText(txt, x, y); ctx.textAlign = 'start'; }
+function starPath(ctx, cx, cy, R) { ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? R * 0.45 : R; ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a)); } ctx.closePath(); }
+function starsSVG(n) { return [0, 1, 2].map(i => `<svg viewBox="0 0 24 24"><path d="M12 2l3 6.5 7 .8-5.2 4.8 1.5 7L12 17.5 5.7 21l1.5-7L2 9.3l7-.8z" fill="${i < n ? '#ffc83d' : 'none'}" stroke="#12233d" stroke-width="1.6"/></svg>`).join(''); }
+
+/* ======================= MISSION 1: DRIVE ======================= */
+const D = { robot: { x: 0.4, y: 1.0, th: 0 }, stars: [], score: 0, left: 30, running: false, conn: 'usb', amp: 1, keys: new Set(), queue: [], cmd: [0, 0, 0], lastApply: 0, lagNow: 0, lagHist: [], tick: 0, tPrev: 0 };
+const cD = $('#cDrive'), cDctx = () => arena(cD);
+function dNewStars() { D.stars = Array.from({ length: 8 }, () => ({ x: 0.3 + Math.random() * 2.4, y: 0.25 + Math.random() * 1.5 })); }
+function dKeysToCmd() {
+  const k = D.keys; return [((k.has('w') ? 1 : 0) - (k.has('s') ? 1 : 0)) * 0.5, ((k.has('d') ? 1 : 0) - (k.has('a') ? 1 : 0)) * 0.5, ((k.has('e') ? 1 : 0) - (k.has('q') ? 1 : 0)) * 1.4];
+}
+function dStep(dt, now) {
+  // 20 Hz: send the current command through the "connection"
+  D.tick += dt;
+  while (D.tick >= 0.05) {
+    D.tick -= 0.05;
+    const d = Logic.delay(D.conn) * D.amp; D.lagHist.push(d * 1000); if (D.lagHist.length > 60) D.lagHist.shift();
+    D.lastApply = Math.max(D.lastApply, now + d); D.queue.push({ t: D.lastApply, c: dKeysToCmd() });
+  }
+  while (D.queue.length && D.queue[0].t <= now) D.cmd = D.queue.shift().c;
+  D.lagNow = D.lagHist.length ? D.lagHist[D.lagHist.length - 1] : 0;
+  const r = D.robot, [vx, vy, wz] = D.cmd;
+  r.x += (vx * Math.cos(r.th) - vy * Math.sin(r.th)) * dt; r.y += (vx * Math.sin(r.th) + vy * Math.cos(r.th)) * dt; r.th += wz * dt;
+  r.x = Logic.clamp(r.x, 0.15, WORLD.w - 0.15); r.y = Logic.clamp(r.y, 0.15, WORLD.h - 0.15);
+  D.stars = D.stars.filter(s => { if (Math.hypot(s.x - r.x, s.y - r.y) < 0.17) { D.score++; beep(880 + D.score * 60, 0.1, 'triangle'); return false; } return true; });
+}
+function dDraw() {
+  fitCanvas(cD); const A = cDctx(), { ctx, s } = A; drawFloor(A);
+  D.stars.forEach(st => { ctx.fillStyle = css('--sun'); ctx.strokeStyle = css('--ink'); ctx.lineWidth = 3; starPath(ctx, A.X(st.x), A.Y(st.y), 0.075 * s); ctx.fill(); ctx.stroke(); });
+  drawRobot(A, D.robot, D.running);
+  $('#dScore').textContent = D.score; $('#dTime').textContent = Math.ceil(D.left); $('#dLag').textContent = Math.round(D.lagNow);
+  // lag sparkline
+  const h = D.lagHist; if (h.length > 2) { ctx.strokeStyle = css('--coral'); ctx.lineWidth = 3; ctx.beginPath(); const x0 = c0 => c0; h.forEach((v, i) => { const x = 10 + i * (s * 0.012), y = cD.height - 12 - Math.min(v, 300) * s * 0.0009 * 3; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); ctx.fillStyle = css('--muted'); ctx.font = `700 ${Math.round(s * 0.04)}px Nunito`; ctx.fillText('message delay', 10, cD.height - 12 - s * 0.28); }
+}
+let dLast = 0, dNow = 0;
+function dLoop(ts) {
+  const dt = Math.min(0.05, (ts - dLast) / 1000 || 0.016); dLast = ts; dNow += dt;
+  if ($('#tab-drive').hidden === false) {
+    dStep(dt, dNow);
+    if (D.running) { D.left -= dt; if (D.left <= 0 || D.stars.length === 0) dFinish(); }
+    dDraw();
+  }
+  requestAnimationFrame(dLoop);
+}
+function dFinish() {
+  D.running = false; D.keys.clear(); const win = D.score >= 8, st = D.score >= 8 ? 3 : D.score >= 5 ? 2 : D.score >= 2 ? 1 : 0;
+  $('#dResult').hidden = false; $('#dResTitle').textContent = win ? 'All 8 stars! Super driver!' : `You collected ${D.score} stars`;
+  $('#dResText').textContent = D.conn === 'wifi' && D.amp > 1 ? `You drove over Wi-Fi with the lag magnifier at ${D.amp}x. Try the cable and compare!` : (st >= 2 ? 'Nice driving! Try Wi-Fi with the magnifier turned up.' : 'Try again, or switch the connection and feel the difference.');
+  win ? jingle() : beep(330, 0.25, 'sawtooth', 0.04);
+}
+function dStart() { dNewStars(); D.score = 0; D.left = 30; D.running = true; D.robot = { x: 0.4, y: 1.0, th: 0 }; D.queue = []; D.cmd = [0, 0, 0]; $('#dResult').hidden = true; beep(660, 0.1); beep(880, 0.14, 'sine', 0.06, 0.12); }
+$('#dStart').onclick = dStart; $('#dStop').onclick = () => { D.keys.clear(); };
+$$('#dConn button').forEach(b => b.onclick = () => { D.conn = b.dataset.c; $$('#dConn button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+$('#dAmp').oninput = e => { D.amp = +e.target.value; $('#dAmpTxt').textContent = D.amp === 1 ? '1x (real size)' : D.amp + 'x bigger'; };
+const KEYS = 'wasdqe';
+addEventListener('keydown', e => { if ($('#tab-drive').hidden) return; const k = e.key.toLowerCase(); if (KEYS.includes(k)) { D.keys.add(k); e.preventDefault(); } if (k === ' ') { D.keys.clear(); e.preventDefault(); } });
+addEventListener('keyup', e => D.keys.delete(e.key.toLowerCase()));
+$$('#dPad button').forEach(b => { const k = b.dataset.k; const on = e => { D.keys.add(k); b.classList.add('held'); e.preventDefault(); }, off = () => { D.keys.delete(k); b.classList.remove('held'); };
+  b.addEventListener('pointerdown', on); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, off)); });
+dNewStars();
+
+/* ======================= MISSION 2: FIND THE TAG ======================= */
+const F = { robot: null, tags: { t3: { x: 2.35, y: 1.05 }, t1: { x: 2.4, y: 1.75 }, t2: { x: 2.4, y: 0.3 } }, head: 70, run: false, fsm: null, volt: null, speed: 2, trace: [], hist: [], time: 0, acc: 0,
+  v: 0, w: 0, vcmd: 0, wcmd: 0, volts: [0, 0, 0, 0], peak: 0, drag: null, lastState: '', vis: false, result: null };
+const cF = $('#cFind'), cG = $('#cGraph');
+function fReset() { F.robot = { x: 0.4, y: 1.0, th: F.head * Math.PI / 180 }; F.run = false; F.fsm = Logic.makeFSM(); F.volt = Logic.makeVolt(); F.trace = []; F.hist = []; F.time = 0; F.acc = 0; F.v = F.w = F.vcmd = F.wcmd = 0; F.volts = [0, 0, 0, 0]; F.peak = 0; F.result = null; F.lastState = ''; $('#fResult').hidden = true; $('#fGo').disabled = false; }
+function fCamera() { const r = F.robot; return { x: r.x + 0.19 * Math.cos(r.th), y: r.y + 0.19 * Math.sin(r.th) }; }
+function fObserve() {
+  const c = fCamera(), t = F.tags.t3, dx = t.x - c.x, dy = t.y - c.y, d = Math.hypot(dx, dy), b = Logic.wrap(Math.atan2(dy, dx) - F.robot.th);
+  const vis = Math.abs(b) <= Math.PI / 4 && d <= 1.8 && d >= 0.36;
+  return { now: F.time, visible: vis, bearing: b + 0.01 * Logic.gauss(), distance: d + 0.01 * Logic.gauss(), trueDist: d };
+}
+function fStep() {   // one 20 Hz control tick
+  const dt = 0.05, o = fObserve(); F.vis = o.visible; F.trueDist = o.trueDist;
+  const [vc, wc] = F.fsm.update(o); F.vcmd = vc; F.wcmd = wc;
+  F.v += (vc - F.v) * dt / 0.15; F.w += (wc - F.w) * dt / 0.15;
+  if (F.fsm.state === 'ARRIVED') { F.v = 0; F.w = 0; }
+  const r = F.robot; r.x += F.v * Math.cos(r.th) * dt; r.y += F.v * Math.sin(r.th) * dt; r.th += F.w * dt;
+  F.volts = F.volt(Logic.wheels(vc, wc), dt); F.peak = Math.max(F.peak, F.v);
+  F.hist.push([F.time, F.v, F.volts[0]]); F.trace.push([r.x, r.y]);
+  if (F.fsm.state !== F.lastState) { F.lastState = F.fsm.state; beep({ SEARCHING: 440, ALIGNING: 523, CHASING: 659, ARRIVED: 784 }[F.fsm.state], 0.14, 'triangle'); }
+  F.time += dt;
+  if (F.fsm.state === 'ARRIVED') { F.stopT = 0; }
+  if (F.fsm.state === 'ARRIVED' && !F.result) fFinishSoon();
+  if (F.time > 150 && !F.result) fFinish(true);
+}
+let fSettle = 0;
+function fFinishSoon() { fSettle++; F.volts = F.volt([0, 0, 0, 0], 0.05); if (fSettle >= 3) { fSettle = 0; fFinish(false); } }
+function fFinish(timeout) {
+  F.run = false; const c = fCamera(), t = F.tags.t3, gap = Math.hypot(t.x - c.x, t.y - c.y) * 100, err = Math.abs(gap - 20);
+  const stars = timeout ? 0 : err <= 2 ? 3 : err <= 5 ? 2 : 1; F.result = { gap, stars };
+  F.volts = [0, 0, 0, 0];
+  $('#fResult').hidden = false; $('#fStars').innerHTML = starsSVG(stars);
+  $('#fResTitle').textContent = timeout ? 'Robo did not find the tag' : `Robo stopped ${gap.toFixed(1)} cm from the tag!`;
+  $('#fResText').textContent = timeout ? 'The tag must be within 1.8 m and in front of the camera at some point. Move T3 closer and try again.' :
+    `Goal: 20 cm. Chase time ${(F.time).toFixed(1)} s, top speed ${F.peak.toFixed(3)} m/s. All four wheel motors read 0.000 V.`;
+  stars ? jingle() : beep(300, 0.3, 'sawtooth', 0.04); $('#fGo').disabled = false;
+}
+function fDraw() {
+  fitCanvas(cF); const A = arena(cF), { ctx, s } = A; drawFloor(A);
+  const c = fCamera();
+  if (F.run || F.result || true) { // path trace
+    ctx.strokeStyle = css('--violet'); ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.beginPath(); F.trace.forEach(([x, y], i) => i ? ctx.lineTo(A.X(x), A.Y(y)) : ctx.moveTo(A.X(x), A.Y(y))); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // Robo's eyes: view cone
+  if (F.fsm && F.fsm.state !== 'ARRIVED') { ctx.fillStyle = F.vis ? 'rgba(18,169,127,.25)' : 'rgba(255,200,61,.22)'; ctx.beginPath(); ctx.moveTo(A.X(c.x), A.Y(c.y)); ctx.arc(A.X(c.x), A.Y(c.y), 1.8 * s, -(F.robot.th + Math.PI / 4), -(F.robot.th - Math.PI / 4)); ctx.closePath(); ctx.fill(); }
+  const t = F.tags;
+  drawTriangle(ctx, A.X(t.t1.x), A.Y(t.t1.y), 0.1 * s); label(ctx, 'T1', A.X(t.t1.x), A.Y(t.t1.y) + 0.19 * s, s);
+  drawCircle(ctx, A.X(t.t2.x), A.Y(t.t2.y), 0.1 * s); label(ctx, 'T2', A.X(t.t2.x), A.Y(t.t2.y) + 0.19 * s, s);
+  drawTag3(ctx, A.X(t.t3.x), A.Y(t.t3.y), 0.15 * s); label(ctx, 'T3', A.X(t.t3.x), A.Y(t.t3.y) + 0.21 * s, s);
+  if (F.fsm && F.fsm.state === 'ARRIVED' && F.result) { // 20 cm ruler
+    ctx.strokeStyle = css('--mint'); ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(A.X(c.x), A.Y(c.y) - 0.12 * s); ctx.lineTo(A.X(t.t3.x), A.Y(t.t3.y) - 0.12 * s); ctx.stroke(); label(ctx, F.result.gap.toFixed(1) + ' cm', (A.X(c.x) + A.X(t.t3.x)) / 2, A.Y(c.y) - 0.17 * s, s);
+  }
+  drawRobot(A, F.robot, F.run);
+  const far = fObserve().trueDist; $('#fDist').textContent = (far * 100).toFixed(0) + ' cm' + (far > 1.8 ? ' (too far to read: move T3 closer)' : '');
+  $$('#fStates .chip[data-s]').forEach(ch => { const on = !!F.fsm && F.fsm.state === ch.dataset.s; ch.classList.toggle('on', on); ch.classList.toggle('ok', on && ch.dataset.s === 'ARRIVED'); });
+  // meters
+  F.volts.forEach((v, i) => { const b = $('#vb' + i), pct = Logic.clamp(v / 2.2, -1, 1) * 50; b.style.left = pct >= 0 ? '50%' : (50 + pct) + '%'; b.style.width = Math.abs(pct) + '%'; b.classList.toggle('neg', v < 0); $('#vn' + i).textContent = (Math.abs(v) < 0.0005 ? 0 : v).toFixed(3); });
+  // graph
+  const g = cG.getContext('2d'); g.clearRect(0, 0, cG.width, cG.height); g.fillStyle = css('--floor-b'); g.fillRect(0, 0, cG.width, cG.height);
+  const H = F.hist, tmax = Math.max(30, F.time); const px = t => 12 + (cG.width - 24) * (t / tmax), py0 = cG.height - 14;
+  g.strokeStyle = css('--grid'); g.lineWidth = 1; for (let k = 0; k <= 4; k++) { g.beginPath(); g.moveTo(12, py0 - k * 40); g.lineTo(cG.width - 12, py0 - k * 40); g.stroke(); }
+  const plot = (idx, col, sc, off) => { g.strokeStyle = col; g.lineWidth = 3; g.beginPath(); H.forEach((p, i) => { const x = px(p[0]), y = py0 - (p[idx] * sc + off); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); };
+  g.strokeStyle = css('--ink'); g.lineWidth = 2; g.beginPath(); g.moveTo(12, py0 - 70); g.lineTo(cG.width - 12, py0 - 70); g.stroke(); plot(2, css('--blue'), 50, 70); plot(1, css('--mint'), 700, 70);
+}
+let fLast = 0, fAcc = 0;
+function fLoop(ts) {
+  const dt = Math.min(0.1, (ts - fLast) / 1000 || 0.016); fLast = ts;
+  if ($('#tab-find').hidden === false) {
+    if (F.run) { fAcc += dt * F.speed; while (fAcc >= 0.05 && F.run) { fAcc -= 0.05; fStep(); } }
+    fDraw();
+  }
+  requestAnimationFrame(fLoop);
+}
+function fPos(e) { const r = cF.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * WORLD.w, y: WORLD.h - (e.clientY - r.top) / r.height * WORLD.h }; }
+cF.addEventListener('pointerdown', e => { if (F.run) return; const p = fPos(e); let best = null, bd = 0.2; for (const k of ['t3', 't1', 't2']) { const d = Math.hypot(F.tags[k].x - p.x, F.tags[k].y - p.y); if (d < bd) { bd = d; best = k; } } if (best) { F.drag = best; cF.setPointerCapture(e.pointerId); } });
+cF.addEventListener('pointermove', e => { if (!F.drag) return; const p = fPos(e); F.tags[F.drag] = { x: Logic.clamp(p.x, 0.55, WORLD.w - 0.1), y: Logic.clamp(p.y, 0.1, WORLD.h - 0.1) }; });
+['pointerup', 'pointercancel'].forEach(ev => cF.addEventListener(ev, () => { F.drag = null; }));
+$('#fGo').onclick = () => { fReset(); F.run = true; $('#fGo').disabled = true; fSettle = 0; beep(660, 0.1); beep(880, 0.14, 'sine', 0.06, 0.12); };
+$('#fReset').onclick = fReset;
+$('#fRand').onclick = () => { if (F.run) return; const dd = 1.0 + Math.random() * 0.7, aa = (Math.random() - 0.5) * Math.PI * 0.8; F.tags.t3 = { x: Math.min(2.9, 0.59 + dd * Math.cos(aa)), y: Logic.clamp(1.0 + dd * Math.sin(aa), 0.25, 1.75) }; F.tags.t1 = { x: 0.8 + Math.random() * 2, y: 1.5 + Math.random() * 0.4 }; F.tags.t2 = { x: 0.8 + Math.random() * 2, y: 0.1 + Math.random() * 0.4 }; F.head = Math.round((Math.random() * 360 - 180) / 5) * 5; $('#fHead').value = F.head; $('#fHeadTxt').textContent = F.head + ' degrees'; fReset(); };
+$('#fHead').oninput = e => { F.head = +e.target.value; $('#fHeadTxt').textContent = F.head + ' degrees'; if (!F.run) fReset(); };
+$$('#fSpeed button').forEach(b => b.onclick = () => { F.speed = +b.dataset.v; $$('#fSpeed button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+fReset();
+
+/* ======================= MISSION 3: MESSAGE RACE ======================= */
+const R = { running: false };
+function raceArrivals(kind, n) { const out = []; let prev = 0; for (let k = 0; k < n; k++) { const sent = k * 0.1, a = Math.max(prev, sent + Logic.delay(kind)); out.push([sent, a]); prev = a; } return out; }
+function stats(arr) { const iv = arr.slice(1).map((p, i) => p[1] - arr[i][1]); const m = iv.reduce((a, b) => a + b, 0) / iv.length, sd = Math.sqrt(iv.reduce((a, b) => a + (b - m) ** 2, 0) / iv.length); return { m: m * 1000, sd: sd * 1000, mx: Math.max(...iv) * 1000 }; }
+function drawLane(cv, arr, t, col) {
+  const g = cv.getContext('2d'), w = cv.width, h = cv.height; g.clearRect(0, 0, w, h); g.fillStyle = css('--floor-b'); g.fillRect(0, 0, w, h);
+  const T = 4.4, X = tt => 14 + (w - 28) * (tt / T);
+  g.strokeStyle = css('--grid'); g.lineWidth = 1; for (let s = 0; s <= 4; s++) { g.beginPath(); g.moveTo(X(s), 0); g.lineTo(X(s), h); g.stroke(); g.fillStyle = css('--muted'); g.font = '700 14px Nunito'; g.fillText(s + ' s', X(s) + 3, h - 6); }
+  arr.forEach(([sent, a]) => { if (a <= t) { g.fillStyle = col; g.strokeStyle = css('--ink'); g.lineWidth = 2; g.beginPath(); g.arc(X(a), h * 0.42, 9, 0, 7); g.fill(); g.stroke(); } else if (sent <= t) { g.fillStyle = css('--sun'); g.beginPath(); g.arc(X(sent), h * 0.75, 5, 0, 7); g.fill(); } });
+}
+let rData = null, rT = 0;
+function rDrawAll() { ['A', 'B'].forEach(id => { const cv = $('#cLane' + id); if (cv.width !== 900) { cv.width = 900; } }); if (!rData) { drawLane($('#cLaneA'), [], 0, css('--blue')); drawLane($('#cLaneB'), [], 0, css('--coral')); return; } drawLane($('#cLaneA'), rData.a, rT, css('--blue')); drawLane($('#cLaneB'), rData.b, rT, css('--coral')); }
+let rLast = 0;
+function rLoop(ts) { const dt = Math.min(0.1, (ts - rLast) / 1000 || 0.016); rLast = ts; if ($('#tab-race').hidden === false) { if (R.running) { rT += dt * 1.2; if (rT > 4.4) { R.running = false; const A = stats(rData.a), B = stats(rData.b); $('#rStatA').textContent = `Cable: ${A.m.toFixed(0)} ms apart (steady)`; $('#rStatB').textContent = `Wi-Fi: ${B.m.toFixed(0)} +/- ${B.sd.toFixed(0)} ms, longest gap ${B.mx.toFixed(0)} ms`; $('#rRace').disabled = false; } } rDrawAll(); } requestAnimationFrame(rLoop); }
+$('#rRace').onclick = () => { rData = { a: raceArrivals('usb', 40), b: raceArrivals('wifi', 40) }; rT = 0; R.running = true; $('#rRace').disabled = true; $('#rStatA').textContent = 'Cable: sending...'; $('#rStatB').textContent = 'Wi-Fi: sending...'; beep(600, 0.08); };
+
+/* ======================= HOW ROBO THINKS ======================= */
+function thinkDraw() {
+  const c = $('#cTag'), g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); drawTag3(g, c.width / 2, c.height / 2, c.width * 0.62);
+  const d0 = +$('#tD').value, tr = Logic.makeTraj(d0); $('#tDtxt').textContent = d0.toFixed(2) + ' m';
+  const p = $('#cPlan'), q = p.getContext('2d'), w = p.width, h = p.height; q.fillStyle = css('--floor-b'); q.fillRect(0, 0, w, h);
+  const Tm = 16, X = t => 50 + (w - 70) * t / Tm, Y = v => h - 36 - (h - 70) * v / 0.18;
+  q.strokeStyle = css('--grid'); q.lineWidth = 1; q.fillStyle = css('--muted'); q.font = '700 16px Nunito';
+  for (let s = 0; s <= 16; s += 2) { q.beginPath(); q.moveTo(X(s), 10); q.lineTo(X(s), h - 36); q.stroke(); q.fillText(s + ' s', X(s) - 8, h - 14); }
+  [0, 0.05, 0.1, 0.15].forEach(v => { q.beginPath(); q.moveTo(50, Y(v)); q.lineTo(w - 20, Y(v)); q.stroke(); q.fillText(v.toFixed(2), 4, Y(v) + 5); });
+  q.strokeStyle = css('--coral'); q.setLineDash([8, 6]); q.lineWidth = 3; q.beginPath(); q.moveTo(50, Y(0.16)); q.lineTo(w - 20, Y(0.16)); q.stroke(); q.setLineDash([]); q.fillStyle = css('--coral'); q.fillText('speed limit 0.16 m/s', w - 200, Y(0.16) - 6);
+  q.strokeStyle = css('--mint'); q.lineWidth = 5; q.beginPath(); for (let i = 0; i <= 200; i++) { const t = tr.T * i / 200, x = X(t), y = Y(tr.v(t)); i ? q.lineTo(x, y) : q.moveTo(x, y); } q.stroke();
+  let pk = 0; for (let i = 0; i <= 400; i++) pk = Math.max(pk, tr.v(tr.T * i / 400));
+  $('#tPlanTxt').textContent = `Chase time ${tr.T.toFixed(1)} s. Robo rolls ${(tr.zf * 100).toFixed(0)} cm, top speed ${pk.toFixed(3)} m/s (about ${(pk * 3.6).toFixed(1)} km/h, slower than a walk).`;
+}
+$('#tD').oninput = thinkDraw;
+
+/* ======================= TABS + SOUND ======================= */
+function showTab(name) {
+  const ok = ['drive', 'find', 'race', 'think'].includes(name) ? name : 'drive';
+  $$('[role=tab][data-tab]').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === ok));
+  ['drive', 'find', 'race', 'think'].forEach(n => { $('#tab-' + n).hidden = n !== ok; });
+  if (ok === 'think') requestAnimationFrame(thinkDraw);
+  try { history.replaceState(null, '', '#' + ok); } catch (e) { /* not needed */ }
+}
+$$('[role=tab][data-tab]').forEach(t => t.onclick = () => showTab(t.dataset.tab));
+$('#soundBtn').onclick = e => { soundOn = !soundOn; e.target.setAttribute('aria-pressed', soundOn); e.target.textContent = soundOn ? 'Sound on' : 'Sound off'; if (soundOn) beep(660, 0.1); };
+addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+showTab(location.hash.slice(1) || 'drive'); thinkDraw();
+requestAnimationFrame(dLoop); requestAnimationFrame(fLoop); requestAnimationFrame(rLoop);
+</script>

@@ -1,0 +1,5 @@
+$ cd ws && colcon build --symlink-install --packages-select rm_flatness_nav
+Starting >>> rm_flatness_nav
+Finished <<< rm_flatness_nav [4.14s]
+
+Summary: 1 package finished [4.48s]

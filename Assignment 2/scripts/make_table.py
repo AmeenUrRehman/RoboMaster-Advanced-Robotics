@@ -5,7 +5,7 @@ import sys
 
 rows = list(csv.DictReader(open(sys.argv[1])))
 out = [r'\begin{longtable}{@{}rrrrrp{5.2cm}@{}}',
-       r'\caption{Chassis motor armature voltage log (target: Tag 3), from \texttt{motor\_voltage\_log.csv}, one row per second.}\\',
+       r'\caption*{\textbf{Table 1.} Chassis motor armature voltage log (target: Tag 3), from \texttt{motor\_voltage\_log.csv}, one row per second.}\\',
        r'\toprule', r'\textbf{$t$ (s)} & $V_1$ (V) & $V_2$ (V) & $V_3$ (V) & $V_4$ (V) & \textbf{State}\\', r'\midrule', r'\endfirsthead',
        r'\toprule', r'\textbf{$t$ (s)} & $V_1$ (V) & $V_2$ (V) & $V_3$ (V) & $V_4$ (V) & \textbf{State}\\', r'\midrule', r'\endhead',
        r'\bottomrule', r'\endfoot']

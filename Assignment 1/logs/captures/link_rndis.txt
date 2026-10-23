@@ -1,0 +1,9 @@
+$ ip -br addr | grep -E "enx|wlp"
+wlp1s0           UP             10.83.73.66/22 fe80::cc1c:e9c5:8ca4:50d2/64 
+enx52a542fd448f  UNKNOWN        192.168.42.3/24 fe80::63fa:6196:dc04:4e67/64 
+$ lsusb | grep -i dji
+Bus 001 Device 061: ID 2ca3:001f DJI Technology Co., Ltd. DJI
+$ ping -c 3 192.168.42.2 | tail -2
+3 packets transmitted, 3 received, 0% packet loss, time 2055ms
+rtt min/avg/max/mdev = 0.258/0.423/0.740/0.223 ms
+# SDK check over rndis (battery subscription, 3 s): battery [66]  samples 15

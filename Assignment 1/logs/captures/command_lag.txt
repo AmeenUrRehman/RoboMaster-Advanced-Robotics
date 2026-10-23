@@ -1,0 +1,2 @@
+rndis  key presses with a response: 20   delay mean 0.16 s  median 0.20 s  max 0.30 s  min 0.00 s
+ap     key presses with a response: 15   delay mean 0.19 s  median 0.20 s  max 0.50 s  min 0.00 s

@@ -1,0 +1,15 @@
+$ ros2 bag info logs/bag_ap
+
+Files:             bag_ap_0.mcap
+Bag size:          5.2 MiB
+Storage id:        mcap
+ROS Distro:        jazzy
+Duration:          289.501243996s
+Start:             Oct 23 2026 15:47:07.777658130 (1792759627.777658130)
+End:               Oct 23 2026 15:51:57.278902126 (1792759917.278902126)
+Messages:          5804
+Topic information: Topic: /cmd_vel | Type: geometry_msgs/msg/Twist | Count: 81 | Serialization Format: cdr
+                   Topic: /joint_states | Type: sensor_msgs/msg/JointState | Count: 2896 | Serialization Format: cdr
+                   Topic: /odom | Type: nav_msgs/msg/Odometry | Count: 2827 | Serialization Format: cdr
+Service:           0
+Service information: 

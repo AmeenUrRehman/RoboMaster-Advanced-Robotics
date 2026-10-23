@@ -4,6 +4,7 @@
 \usepackage{lmodern}
 \usepackage{amsmath,amssymb,bm}
 \usepackage{xcolor,enumitem,titlesec,graphicx,booktabs,fancyvrb,float,caption,longtable,fancyhdr}
+\usepackage{pdflscape}\usepackage{tikz}\usetikzlibrary{arrows.meta,positioning}
 \usepackage[hidelinks]{hyperref}
 \definecolor{soft}{gray}{0.93}
 \definecolor{acc}{HTML}{B00020}
@@ -40,73 +41,240 @@
 \noindent\textbf{Student:} Ameen Ur Rehman (202527430) \hfill \textbf{Marks:} 10\\
 \textbf{Instructor:} Prof. Aamer Iqbal Bhatti\\
 \textbf{Institution:} King Fahd University of Petroleum \& Minerals
+\\
+\textbf{Code and data:} \url{https://github.com/AmeenUrRehman/RoboMaster-Advanced-Robotics} (private repository; folder \texttt{Assignment 1})
 \par\vspace{2pt}\noindent\rule{\linewidth}{0.8pt}
 
-\section{Problem 1: Host environment and middleware}
+\begin{abstract}\noindent
+This report documents the provisioning of a bare-metal Ubuntu~24.04 / ROS~2 Jazzy environment for a DJI RoboMaster EP Core, a standalone keyboard teleoperation and telemetry script written against the native Python SDK, and a ROS~2 integration over the robot's own Wi-Fi access point.
+All numbers in the report come from logs recorded on the robot during the project; every terminal figure is an image rendered from the \emph{captured text} of the real command (the text files are in \texttt{logs/captures/} and \texttt{logs/}), and nothing was typed in by hand.
+The main findings are: (i) a virtual environment with system site-packages, a pinned \texttt{numpy<2}, and a shell loader that sets \texttt{PYTHONNOUSERSITE} keeps NumPy~1.26 (the ABI the ROS~2 binaries were built against) in force, and the failure that an unconstrained \texttt{pip install -U numpy} causes was reproduced in a throw-away copy of the setup; (ii) the wired RNDIS link has a mean ping of 0.45\,ms against 28.3\,ms over the access point, and the telemetry stream is evenly spaced over USB ($102.3\pm8.8$\,ms) but arrives in bursts over Wi-Fi ($120.2\pm52.3$\,ms); (iii) the ROS~2 driver publishes \texttt{/odom} and \texttt{/joint\_states} at about 10\,Hz over the access point, and the full TF tree was inspected; (iv) the mecanum forward and inverse kinematic matrices were derived and checked numerically.
+Items that are still open are marked in the text.
+\end{abstract}
 
-\subsection{(i)--(iv) Provisioning snapshots}
-Captured from the lab host with the commands shown (raw file: \texttt{logs/system\_diagnostics.txt}).
-Kernel, Ubuntu 24.04 LTS, Python 3.12, ROS 2 Jazzy, Gazebo Harmonic (Gazebo Sim 8.x) and NumPy 1.26.4 inside \texttt{\textasciitilde/rm\_venv} are all in place;
-\texttt{robomaster} SDK (community fork) and \texttt{robomaster\_ros} were built with \texttt{colcon build --symlink-install}.
+\subsection*{Summary of results}
+\begin{center}\small
+\begin{tabular}{@{}p{7.1cm}p{4.2cm}p{4.2cm}@{}}
+\toprule
+\textbf{Quantity} & \textbf{Wired USB (\texttt{rndis})} & \textbf{Access point (\texttt{ap})}\\
+\midrule
+Ping RTT, $N=100$: mean / 95th pct / max & 0.45 / 0.56 / 2.75\,ms & 28.3 / 127 / 152\,ms\\
+Ping loss & 0\,\% & 0\,\%\\
+Telemetry arrival interval (mean $\pm$ std) & $102.3\pm8.8$\,ms & $120.2\pm52.3$\,ms\\
+Key press to wheel response (mean / max) & 0.16 / 0.30\,s & 0.19 / 0.50\,s\\
+SDK teleoperation log & 299 rows, 29.9\,s & 299 rows, 29.9\,s\\
+ROS~2 \texttt{/odom} rate & n/a & 9.8\,Hz (4 to 226\,ms)\\
+ROS~2 bag & n/a & 289.5\,s, 5804 messages\\
+\bottomrule
+\end{tabular}
+\end{center}
 
-{\footnotesize
-\VerbatimInput[fontsize=\scriptsize]{../logs/system_diagnostics.txt}}
+\section{Experimental setup}
+\subsection{Hardware and software}
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Robot & DJI RoboMaster EP Core (Motion Controller and Intelligent Controller)\\
+Host & Laptop, Ubuntu 24.04.5 LTS, kernel 7.0.0-38-generic, 233\,GB SSD\\
+ROS & ROS~2 Jazzy Jalisco (\texttt{ros-jazzy-desktop-full 0.11.0}), Gazebo Sim 8.15 (Harmonic)\\
+Python & 3.12.3; virtual environment \texttt{\textasciitilde/rm\_venv}; NumPy 1.26.4; OpenCV 4.6.0\\
+SDK & community fork \texttt{jeguzzi/RoboMaster-SDK} (\texttt{robomaster 0.1.2.0})\\
+ROS driver & \texttt{jeguzzi/robomaster\_ros}, built with \texttt{colcon build --symlink-install}\\
+Links & USB RNDIS (robot \texttt{192.168.42.2}), direct Wi-Fi hotspot (robot \texttt{192.168.2.1})\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{The two physical topologies}
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=2.6cm, >=Stealth, every node/.style={font=\small}]
+  \node[draw, rounded corners, minimum width=2.4cm, minimum height=1.0cm, align=center] (pc1) {Laptop\\\texttt{enx52a542fd448f}\\192.168.42.3/24};
+  \node[draw, rounded corners, minimum width=2.4cm, minimum height=1.0cm, align=center, right=5.2cm of pc1] (r1) {RoboMaster EP\\192.168.42.2};
+  \draw[<->, thick] (pc1) -- node[above]{Micro-USB, RNDIS} node[below]{switch: Direct/USB} (r1);
+  \node[draw, rounded corners, minimum width=2.4cm, minimum height=1.0cm, align=center, below=2.0cm of pc1] (pc2) {Laptop\\\texttt{wlp1s0}\\192.168.2.32/24};
+  \node[draw, rounded corners, minimum width=2.4cm, minimum height=1.0cm, align=center, right=5.2cm of pc2] (r2) {RoboMaster EP\\192.168.2.1 (access point)};
+  \draw[<->, thick, dashed] (pc2) -- node[above]{Wi-Fi, SSID \texttt{RMEP-21b442}} node[below]{switch: AP} (r2);
+\end{tikzpicture}
+\caption{The two topologies used. Over USB the laptop keeps its normal Wi-Fi (and Internet); in AP mode the single Wi-Fi radio is tied to the robot, so the Internet connection is lost.}
+\end{figure}
+
+\subsection{Method and data provenance}
+Every dataset was recorded by the scripts in the repository and saved unmodified:
+\texttt{ep\_teleop\_sdk.py} produced \texttt{logs/rndis\_run.csv} and \texttt{logs/ap\_run.csv}; \texttt{scripts/ping\_bench.sh} produced the ping logs; \texttt{ros2 bag record} produced \texttt{logs/bag\_ap}; \texttt{ros2 run tf2\_tools view\_frames} produced \texttt{figures/frames.pdf}. The analysis scripts (\texttt{analyze\_telemetry.py}, \texttt{plot\_odom.py}, \texttt{command\_lag.py}, \texttt{make\_report\_figs.py}) only read these files.
+An earlier wired attempt was cut to 9.6\,s by a USB enumeration failure (kernel message \texttt{device not accepting address, error -71}) and was repeated; only the complete runs are reported.
+
+\section{Problem 1: Host operating environment and middleware}
+
+\subsection{(i) Operating system provisioning}
+Ubuntu~24.04 LTS runs bare-metal on the laptop (no virtual machine), so USB RNDIS and Wi-Fi packets are not subject to virtualization latency or loss. The system snapshot below was captured on the host.
+
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/term/diag.png}
+\caption{Kernel, release, Python, ROS~2 and Gazebo versions, and disk space (\texttt{logs/system\_diagnostics.txt}).}\label{fig:diag}
+\end{figure}
+
+\subsection{(ii) ROS~2 and simulation toolchain}
+ROS~2 Jazzy (\texttt{ros-jazzy-desktop-full}) and Gazebo Harmonic (\texttt{ros-jazzy-ros-gz}) are installed from the ROS apt repository together with the three development packages named in the assignment. Figure~\ref{fig:install} shows the package versions and the workspace.
+
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/term/install.png}
+\caption{Installed ROS~2, Gazebo and development packages, and the source workspace (\texttt{logs/captures/install\_check.txt}).}\label{fig:install}
+\end{figure}
+
+\subsection{(iii) Isolated Python virtual environment}
+The environment was created with \texttt{python3 -m venv --system-site-packages \textasciitilde/rm\_venv}. The option matters: ROS~2 ships its Python bindings (\texttt{rclpy}, \texttt{cv\_bridge}) as binary extensions installed by apt, and a venv without system site-packages could not import them. The SDK dependencies were then installed \emph{inside} the venv with \texttt{python -m pip}, which respects PEP~668 because the system interpreter is never modified:
+\begin{Verbatim}[fontsize=\small]
+python -m pip install -i https://test.pypi.org/simple/ rm-libmedia-codec
+python -m pip install "numpy<2" "numpy-quaternion" pyyaml
+python -m pip install git+https://github.com/jeguzzi/RoboMaster-SDK.git
+\end{Verbatim}
+Figure~\ref{fig:env} shows what the environment resolves to after sourcing the loader script (Appendix~B).
+
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/term/env.png}
+\caption{After \texttt{source \textasciitilde/rm\_setup.sh}: the interpreter is the venv's, \texttt{PYTHONNOUSERSITE=1}, the venv comes first on \texttt{PYTHONPATH}, and \texttt{numpy}, \texttt{cv2}, \texttt{rclpy}, \texttt{cv\_bridge} and \texttt{robomaster} all import (\texttt{logs/captures/env\_check.txt}).}\label{fig:env}
+\end{figure}
+
+\subsection{(iv) ROS~2 driver compilation}
+The driver was cloned into \texttt{\textasciitilde/ros2\_ws/src} and built with \texttt{colcon build --symlink-install}. The workspace contains the three packages \texttt{robomaster\_ros} (Python), \texttt{robomaster\_msgs} and \texttt{robomaster\_description} (both CMake), and they appear in the output of \texttt{ros2 pkg list} (Figure~\ref{fig:env}) and \texttt{colcon list} (Figure~\ref{fig:install}). \texttt{--symlink-install} links the Python sources into \texttt{install/}, so edits to the driver take effect without a rebuild.
 
 \subsection{(v) ABI incompatibility analysis}
-\textbf{Why \texttt{pip install -U numpy} breaks ROS 2 nodes.}
-NumPy 2.0 changed the C-API and ABI. Struct layouts exposed to extensions (for example \texttt{PyArray\_Descr}, whose \texttt{elsize} and \texttt{alignment} fields were widened and moved, and removed legacy members) and the function table behind \texttt{PyArray\_API} were reorganised.
-A compiled extension does not call NumPy by name. It indexes into that table and reads those structs at \emph{fixed offsets baked in at build time}.
-The Ubuntu/ROS binaries (\texttt{cv\_bridge}'s Boost.Python module, \texttt{rclpy} message converters, OpenCV's \texttt{cv2}) are compiled against NumPy 1.26. If NumPy 2.x is what gets imported at run time, those offsets point at the wrong slots and fields.
-The outcome is one of two failure modes: NumPy's guard raises \texttt{ImportError: A module that was compiled using NumPy 1.x cannot be run in NumPy 2.x}, or, where the mismatch goes unchecked, the extension dereferences a wrong pointer and the interpreter dies with a segmentation fault.
-Python-level code is unaffected, which is why the failure shows up only at the C boundary (image conversion, point-cloud and array message handling).
+\paragraph{What changed in NumPy~2.0.} NumPy~2.0 is the first release in more than a decade to break the C~ABI. Among other changes, struct layouts that extensions read directly (for example \texttt{PyArray\_Descr}, whose element-size and alignment members were widened and whose legacy members were removed) changed, many deprecated macros and functions were removed, and the table of function pointers behind \texttt{PyArray\_API}, through which every compiled extension calls NumPy, was reorganised. The ABI version number checked at import time was raised accordingly.
 
-\textbf{Why a plain \texttt{-U} triggers it.}
-With a venv created using \texttt{--system-site-packages}, an unconstrained upgrade installs NumPy 2.x into the venv's own \texttt{site-packages}. That directory comes first on \texttt{sys.path}, so it \emph{shadows} the apt-provided 1.26.4 that the ROS binaries were built for. The same shadowing happens if a user-level copy sits in \texttt{\textasciitilde/.local}.
+\paragraph{Why a compiled module cannot survive that.} A compiled extension does not call NumPy by name. At import it obtains the table of function pointers and thereafter calls NumPy by \emph{index}, and it reads array and descriptor fields at \emph{byte offsets} fixed when it was compiled. The ROS~2 binaries on this host (OpenCV's \texttt{cv2}, the Boost.Python module of \texttt{cv\_bridge}, the converters used by \texttt{rclpy}) were compiled against NumPy~1.26 (Ubuntu~24.04 ships 1.26.4). If NumPy~2.x is what Python finds at run time, those indices and offsets point at the wrong slots and fields. The result is either a clean failure, where the module's import-time check raises \texttt{ImportError: A module that was compiled using NumPy 1.x cannot be run in NumPy 2.x}, or, when a mismatched access is not caught, a wrong function is called and the interpreter dies with a segmentation fault. Pure-Python code is unaffected, which is why the failure shows up only at the C boundary, for example when converting images.
 
-\textbf{How the setup isolates and resolves it.}
-\begin{itemize}
-  \item \texttt{python -m venv --system-site-packages}: the interpreter can see ROS's compiled bindings (\texttt{rclpy}, \texttt{cv\_bridge}) while pip installs stay out of the system Python, which PEP 668 protects.
-  \item \texttt{"numpy<2"}: the explicit pin forbids pip from ever resolving to 2.x (the RoboMaster SDK and \texttt{numpy-quaternion} would otherwise pull the latest).
-  \item \texttt{rm\_setup.sh}: sources ROS and the workspace overlay, activates the venv, prepends the venv \texttt{site-packages} to \texttt{PYTHONPATH}, and exports \texttt{PYTHONNOUSERSITE=1} so \texttt{\textasciitilde/.local} packages cannot shadow anything. Every shell therefore resolves the same, ABI-consistent NumPy.
-\end{itemize}
-\textbf{Observation on this host.} \texttt{import numpy} resolves to \texttt{/usr/lib/python3/dist-packages} (1.26.4), because the pin was already satisfied by the system copy and pip therefore installed no second one. The effect is the same: one NumPy, the one ROS was compiled against.
-
-\section{Problem 2: SDK teleoperation and telemetry}
-
-\subsection{(i) Implementation: \texttt{ep\_teleop\_sdk.py}}
-A single-file script, importing only \texttt{robomaster} (no ROS 2 imports).
-\begin{itemize}
-  \item \textbf{Keyboard:} \texttt{curses}, non-blocking. W/S $\to v_x$, A/D $\to v_y$, Q/E $\to \omega_z$. Terminals report presses and auto-repeat but never key release, so each key carries a hold window (0.55\,s for the first press to cover the OS typematic delay, 0.15\,s once repeating). When repeats stop the key counts as released and its contribution drops out. Keys can combine (e.g.\ forward plus strafe).
-  \item \textbf{Dispatch:} commands go to \texttt{ep\_robot.chassis.drive\_speed()} at 20\,Hz.
-  \item \textbf{Telemetry:} \texttt{sub\_battery\_info}, \texttt{sub\_attitude} and \texttt{sub\_esc} are subscribed at 10\,Hz. A logger writes one CSV row per 100\,ms: battery state of charge, yaw/pitch/roll, four wheel speeds (rpm), the arrival time of the newest ESC packet, and the commanded twist.
-  \item \textbf{Failsafe:} Space zeroes $v_x=v_y=\omega_z=0$ immediately (sent in the same loop iteration, not on the next 20\,Hz tick). Releasing keys stops the chassis through the hold window. The \texttt{finally} block sends stop commands and unsubscribes on any exit, including exceptions.
-\end{itemize}
-SDK sign convention: $x$ forward, $y$ to the \emph{right}, $\omega_z$ \emph{clockwise}. This is the opposite of ROS REP-103 ($y$ left, $\omega_z$ counter-clockwise); the driver handles the conversion for the ROS runs.
-
-\textbf{Logic check without hardware.} The control path was exercised against a stub SDK in a pseudo-terminal: forward hold produced $v_x=0.3$\,m/s, forward plus strafe combined, both dropped to zero 0.45\,s after the last keypress, yaw produced $45^\circ$/s, and Space zeroed all commands within 6\,ms. The CSV logger wrote 10 rows/s. This is a software test only and is \emph{not} the hardware result.
-
-\subsection{(ii) Wired RNDIS run (30\,s)}
-Controller switch on Direct/USB, Micro-USB data cable, \texttt{python ep\_teleop\_sdk.py --conn rndis --duration 30 --out logs/rndis\_run.csv}.
-\textbf{Result.} Complete 30\,s run: 299 rows over 29.9\,s (10\,Hz) with battery, attitude and all four wheel speeds logged and no missing values; the newest ESC packet arrived 0.04\,s before the file ended, so the link stayed up for the whole run. Forward and lateral commands were used ($|v_x|=|v_y|=0.3$\,m/s), yaw was not. The telemetry arrival interval was $102.3\pm8.8$\,ms (min 98.3, max 202.5, 95th percentile 107.0, $n=291$); the single 200\,ms gap is one late packet. (An earlier wired attempt was cut to 9.6\,s by a USB enumeration failure and was replaced by this run.)
-Terminal log of the run (excerpt of \texttt{logs/rndis\_run.csv}; the first row precedes the first wheel-speed packet, hence \texttt{nan}):
-{\footnotesize\VerbatimInput[fontsize=\tiny]{../logs/excerpt_rndis.txt}}
-
-\subsection{(iii) Wireless AP run (30\,s)}
-Switch on AP mode, laptop joined to the robot's access point (network profile \texttt{RMEP-21b442}), \texttt{python ep\_teleop\_sdk.py --conn ap --duration 30 --out logs/ap\_run.csv}.
-\textbf{Result.} 299 rows over 29.9\,s (10\,Hz); battery, attitude and wheel speeds were logged and all three motions were used (forward and lateral at 0.3\,m/s, yaw at $45^\circ$/s). The ESC telemetry arrival interval was $120.2\pm52.3$\,ms (min 17.3, max 319.6, 95th percentile 222.7, $n=247$).
-Terminal log of the run (excerpt of \texttt{logs/ap\_run.csv}; the first row precedes the first wheel-speed packet, hence \texttt{nan}):
-{\footnotesize\VerbatimInput[fontsize=\tiny]{../logs/excerpt_ap.txt}}
-
-\subsection{(iv) Comparative latency analysis}
-Ping: \texttt{scripts/ping\_bench.sh rndis} and \texttt{ap} (100 packets each). Plots by \texttt{scripts/analyze\_telemetry.py}. The telemetry interval is $\Delta t=t_k-t_{k-1}$ over ESC packet arrival times (network-level), next to the logger loop interval (host scheduling only).
+\paragraph{Reproducing the failure safely.} To show this rather than assert it, the setup was copied into a throw-away venv (\texttt{--system-site-packages}, outside the working environment), \texttt{pip install -U numpy} was run there, and the same imports were attempted. Figure~\ref{fig:np2} is the real output: pip installs NumPy~2.5.4, and importing the system \texttt{cv2} and \texttt{cv\_bridge} fails with the message quoted above. (pip also printed a resolver warning that the system SciPy~1.11.4 requires \texttt{numpy<1.28}.)
 
 \begin{figure}[H]\centering
-\figorti{../figures/fig_dt.png}{0.95}{run analyze\_telemetry.py to generate fig\_dt.png}
-\caption{Telemetry sampling interval $\Delta t$ for wired RNDIS and wireless AP.}
+\includegraphics[width=\linewidth]{../figures/term/numpy2.png}
+\caption{Real failure caused by an unconstrained NumPy upgrade in a throw-away copy of the setup (\texttt{logs/captures/numpy2\_abi\_failure.txt}). The working environment, \texttt{\textasciitilde/rm\_venv}, was not touched.}\label{fig:np2}
+\end{figure}
+
+\paragraph{Why the venv and the loader script prevent it.} Because the venv is created with \texttt{--system-site-packages}, an unconstrained upgrade installs the new NumPy into the venv's own \texttt{site-packages}, which comes \emph{first} on \texttt{sys.path} and therefore shadows the apt NumPy that the binaries need. The same shadowing occurs for a copy in \texttt{\textasciitilde/.local}. The setup defends against both:
+\begin{enumerate}
+  \item \textbf{Pin:} \texttt{"numpy<2"} makes pip refuse any 2.x resolution inside the venv (the SDK's dependency \texttt{numpy-quaternion} would otherwise pull the latest release). On this host the pin is already satisfied by the system 1.26.4, so pip installs no second copy; \texttt{numpy.\_\_file\_\_} in Figure~\ref{fig:env} points to \texttt{/usr/lib/python3/dist-packages}.
+  \item \textbf{Isolation:} the venv keeps all \texttt{pip} installs away from the system Python that PEP~668 protects.
+  \item \textbf{Search-path control:} \texttt{rm\_setup.sh} sources ROS~2 and the workspace, activates the venv, prepends the venv's \texttt{site-packages} to \texttt{PYTHONPATH}, and exports \texttt{PYTHONNOUSERSITE=1} so packages in \texttt{\textasciitilde/.local} can never shadow anything. Every shell therefore resolves the same, ABI-consistent NumPy (the lines of \texttt{PYTHONPATH} in Figure~\ref{fig:env}).
+\end{enumerate}
+The remedy if NumPy~2 is ever needed is the one the error message gives: recompile the affected extension against NumPy~2 headers, which produces a module that also runs on 1.x.
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[>=Stealth, every node/.style={font=\small}]
+  \node[draw, minimum width=7.8cm, minimum height=0.8cm, fill=green!10] (a) {venv \texttt{site-packages} (pinned \texttt{numpy<2}, \texttt{robomaster}, \ldots)};
+  \node[draw, minimum width=7.8cm, minimum height=0.8cm, below=0.12cm of a, fill=green!10] (b) {\texttt{/opt/ros/jazzy/lib/python3.12/site-packages} (\texttt{rclpy}, \ldots)};
+  \node[draw, minimum width=7.8cm, minimum height=0.8cm, below=0.12cm of b, fill=green!10] (c) {workspace overlay (\texttt{robomaster\_ros}, \texttt{robomaster\_msgs})};
+  \node[draw, minimum width=7.8cm, minimum height=0.8cm, below=0.12cm of c, fill=green!10] (d) {system \texttt{dist-packages} (apt: NumPy 1.26.4, \texttt{cv2}, \texttt{cv\_bridge})};
+  \node[draw, dashed, minimum width=7.8cm, minimum height=0.8cm, below=0.12cm of d, fill=red!10] (e) {\texttt{\textasciitilde/.local} user site: \textbf{disabled} by \texttt{PYTHONNOUSERSITE=1}};
+  \draw[->, thick] ([xshift=-4.6cm]a.north) -- node[left, align=right]{search\\order} ([xshift=-4.6cm]e.south);
+\end{tikzpicture}
+\caption{Python module search order after \texttt{source \textasciitilde/rm\_setup.sh}. Only one NumPy can be found, and it is the one the ROS~2 binaries were built for.}
+\end{figure}
+
+\section{Problem 2: Telemetry and keyboard telecommand via the RoboMaster SDK}
+
+\subsection{(i) Design of \texttt{ep\_teleop\_sdk.py}}
+The script (full listing in Appendix~A) imports only \texttt{robomaster} and the Python standard library; it has no ROS~2 dependency. Its structure is shown in Figure~\ref{fig:arch}.
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=1.0cm and 1.5cm, >=Stealth, every node/.style={font=\footnotesize}]
+  \tikzset{blk/.style={draw, rounded corners, minimum width=2.9cm, minimum height=0.9cm, align=center}}
+  \node[blk] (kb) {curses \texttt{getch()}\\non-blocking};
+  \node[blk, right=of kb] (hold) {hold windows\\key $\to$ deadline};
+  \node[blk, right=of hold] (disp) {20\,Hz dispatcher\\\texttt{drive\_speed(x,y,z)}};
+  \node[blk, right=of disp, fill=gray!15] (robot) {RoboMaster EP\\(UDP via SDK)};
+  \node[blk, below=1.4cm of robot, fill=gray!15] (cb) {callbacks, 10\,Hz\\battery, attitude, ESC};
+  \node[blk, left=of cb] (store) {latest-value\\store (lock)};
+  \node[blk, left=of store] (log) {10\,Hz logger\\CSV + screen};
+  \draw[->] (kb) -- (hold); \draw[->] (hold) -- (disp); \draw[->] (disp) -- (robot);
+  \draw[->] (robot) -- (cb); \draw[->] (cb) -- (store); \draw[->] (store) -- (log);
+  \node[blk, below=1.0cm of hold, fill=red!10] (fs) {failsafe: Space, release timeout,\\\texttt{finally}: stop + unsubscribe};
+  \draw[->, dashed] (fs) -- (disp);
+\end{tikzpicture}
+\caption{Architecture of the teleoperation and telemetry script.}\label{fig:arch}
+\end{figure}
+
+\paragraph{Keyboard telecommand.} The terminal is put in \texttt{curses} mode with \texttt{nodelay(True)}, so a read never blocks. W/S map to $v_x=\pm0.3$\,m/s, A/D to $v_y=\mp0.3$\,m/s (the SDK's $y$ axis points to the \emph{right}, so D is $+y$) and Q/E to $\omega_z=\mp45^\circ$/s (the SDK's yaw is \emph{clockwise}). Commands are sent with \texttt{ep\_robot.chassis.drive\_speed()} at 20\,Hz. A terminal delivers key \emph{presses} and the operating system's auto-repeat, but never key \emph{releases}. The script therefore gives each key a hold window: 0.55\,s for the first press, which covers the typematic delay before auto-repeat starts, and 0.15\,s once repeating. A key counts as held while the repeats keep arriving, and its contribution to the velocity vanishes when its window expires. Several keys can be combined, so forward plus strafe produces a diagonal.
+
+\paragraph{Telemetry logging at 10\,Hz.} The script subscribes to \texttt{sub\_battery\_info}, \texttt{sub\_attitude} and \texttt{sub\_esc} at 10\,Hz. The callbacks write into a lock-protected latest-value store, and a logger writes one CSV row every 100\,ms. Besides the quantities asked for, each row records the arrival time of the newest wheel-speed (ESC) packet, \texttt{t\_esc\_rx\_unix}. This is what makes the network analysis of Section~\ref{sec:lat} possible, because the 10\,Hz logger tick alone would only measure host scheduling.
+
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Column} & \textbf{Unit} & \textbf{Meaning}\\
+\midrule
+\texttt{t\_rel\_s}, \texttt{t\_unix} & s & time since start; wall-clock time of the row\\
+\texttt{batt\_pct} & \% & battery state of charge\\
+\texttt{yaw\_deg, pitch\_deg, roll\_deg} & deg & chassis attitude (IMU)\\
+\texttt{w\_fr, w\_fl, w\_rl, w\_rr\_rpm} & rpm & four wheel speeds (SDK ESC order: FR, FL, RL, RR)\\
+\texttt{t\_esc\_rx\_unix} & s & arrival time of the newest ESC packet\\
+\texttt{cmd\_vx, cmd\_vy, cmd\_wz} & m/s, m/s, deg/s & command being sent when the row was written\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Failsafe.} Pressing Space zeroes all velocities and sends a stop command immediately, in the same loop iteration rather than at the next 20\,Hz tick. Releasing the keys stops the chassis through the hold-window expiry. The cleanup code is in a \texttt{finally} block, so on \emph{any} exit (duration reached, X pressed, Ctrl+C, or an exception) three stop commands are sent and the subscriptions are closed.
+
+\paragraph{Software test before using the hardware.} The control path was first exercised against a stub of the SDK inside a pseudo-terminal: holding W produced $v_x=0.3$\,m/s; W plus D combined; both fell to zero 0.45\,s after the last key press; E produced $45^\circ$/s; Space zeroed all commands within 6\,ms; and the logger wrote 10 rows/s. This verified the logic only and is not a hardware result.
+
+\subsection{(ii) Wired mode teleoperation (RNDIS)}
+The controller switch was set to Direct/USB and the robot connected through a Micro-USB data cable. Figure~\ref{fig:rndislink} shows the interface that appeared (\texttt{enx52a542fd448f}, \texttt{192.168.42.3/24}), the DJI device, and the ping to the robot's default RNDIS address.
+
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/term/link_rndis.png}
+\caption{Wired link as seen from the host.}\label{fig:rndislink}
+\end{figure}
+
+\texttt{python ep\_teleop\_sdk.py --conn rndis --duration 30 --out logs/rndis\_run.csv} produced a complete 30\,s run: 299 rows over 29.9\,s with battery, attitude and all four wheel speeds and no missing values, and the newest ESC packet arrived 0.04\,s before the file ended, so the link did not drop. Forward and lateral commands were used ($|v_x|=|v_y|=0.3$\,m/s); yaw was not, so the heading changed by only a few degrees of drift.
+
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/term/teleop_rndis.png}
+\caption{Terminal log of the wired run: first rows, rows from the middle, and last rows of \texttt{logs/rndis\_run.csv}. The first row precedes the first wheel-speed packet, hence \texttt{nan}.}
+\end{figure}
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.95\linewidth]{../figures/fig_telemetry_rndis.png}
+\caption{Wired run: commanded velocities, the four wheel speeds, and the attitude over the 30\,s run.}
+\end{figure}
+
+\subsection{(iii) Wireless hotspot teleoperation (AP)}
+With the switch on AP, the robot broadcast its own network (profile \texttt{RMEP-21b442}) and the laptop joined it. Figure~\ref{fig:hostap} shows the resulting addressing: the laptop is \texttt{192.168.2.32/24} on \texttt{wlp1s0}, the route is the direct \texttt{192.168.2.0/24} subnet, and there is no gateway, which is why the Internet connection is lost in this mode. The last line is an error from my capture script (the \texttt{iw} tool is not installed); it is kept because the capture is shown unedited.
+
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/term/host_ap.png}
+\caption{Host addressing in AP mode (\texttt{logs/ap\_host\_info.txt}).}\label{fig:hostap}
+\end{figure}
+
+The AP run (\texttt{python ep\_teleop\_sdk.py --conn ap --duration 30 --out logs/ap\_run.csv}) is also a complete 30\,s run: 299 rows over 29.9\,s, and this time all three motions were used (forward and lateral at 0.3\,m/s, yaw at $45^\circ$/s), so the yaw changed from $90.3^\circ$ to $122.0^\circ$ ($+31.7^\circ$ for a turn command of about 0.7\,s at $45^\circ$/s).
+
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/term/teleop_ap.png}
+\caption{Terminal log of the AP run (\texttt{logs/ap\_run.csv}).}
+\end{figure}
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.95\linewidth]{../figures/fig_telemetry_ap.png}
+\caption{AP run: commands, wheel speeds and attitude. The logged ESC speeds are motor-signed: the left-side motors read opposite to the right-side ones for the same vehicle motion. After that sign convention is taken into account the patterns are those predicted by the kinematics of Problem~4 (see Table~\ref{tab:pattern}).}
+\end{figure}
+
+\subsection{(iv) Comparative teleoperation latency analysis}\label{sec:lat}
+\paragraph{Definitions.} Ping round-trip times are from 100 ICMP packets 0.2\,s apart. \emph{Jitter} is reported two ways: the standard deviation of the RTT, and the mean absolute difference of successive RTTs, $\overline{|\mathrm{RTT}_i-\mathrm{RTT}_{i-1}|}$ (the RFC~3550-style estimate). The telemetry sample interval is $\Delta t=t_k-t_{k-1}$ computed on the \emph{arrival times of distinct ESC packets} (network level), and for comparison also on the 10\,Hz logger ticks (host scheduling only).
+
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/term/ping_rndis.png}
+\caption{Ping over the wired link (first and last lines of \texttt{logs/ping\_rndis.txt}).}
 \end{figure}
 \begin{figure}[H]\centering
-\figorti{../figures/fig_ping.png}{0.95}{run analyze\_telemetry.py to generate fig\_ping.png}
-\caption{Ping round-trip time, $N=100$.}
+\includegraphics[width=\linewidth]{../figures/term/ping_ap.png}
+\caption{Ping over the access point (first and last lines of \texttt{logs/ping\_ap.txt}).}
+\end{figure}
+
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/fig_dt.png}
+\caption{Telemetry sampling interval $\Delta t$. Top: arrival interval of ESC packets (network). Bottom: interval of the 10\,Hz logger loop (host only; both links look alike, which confirms the difference above is due to the network and not to the laptop).}\label{fig:dt}
+\end{figure}
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/fig_ping.png}
+\caption{Ping RTT for the two links, $N=100$.}
 \end{figure}
 
 \begin{table}[H]\centering\small
@@ -120,75 +288,116 @@ RTT std (ms) & 0.252 & 36.7\\
 Jitter, mean $|{\rm RTT}_i-{\rm RTT}_{i-1}|$ (ms) & 0.137 & 32.1\\
 RTT min / 95th pct / max (ms) & 0.28 / 0.56 / 2.75 & 1.68 / 127.3 / 152.0\\
 Telemetry $\Delta t$ mean $\pm$ std (ms) & $102.3\pm8.8$ (n=291) & $120.2\pm52.3$ (n=247)\\
-Telemetry $\Delta t$ min / max (ms) & 98.3 / 202.5 & 17.3 / 319.6\\
+Telemetry $\Delta t$ min / 95th pct / max (ms) & 98.3 / 107.0 / 202.5 & 17.3 / 222.7 / 319.6\\
+Key press to wheel response, mean / max (s) & 0.16 / 0.30 (n=20) & 0.19 / 0.50 (n=15)\\
 \bottomrule
 \end{tabular}
-\caption*{\textbf{Measured latency statistics.} Both telemetry runs are complete 30\,s logs.}
+\caption*{\textbf{Measured latency statistics.} Both telemetry runs are complete 30\,s logs. The response delays have a resolution of 0.1\,s.}
 \end{table}
 
-\textbf{Discussion.} Wireless AP responsiveness is clearly worse than wired, even though neither link lost any ping.
+\begin{figure}[H]\centering
+\includegraphics[width=0.7\linewidth]{../figures/fig_command_lag.png}
+\caption{Delay between each key press and the first wheel response (mean absolute wheel speed above 15\,rpm), from the two SDK logs.}
+\end{figure}
+
+\paragraph{Discussion.}
 \begin{itemize}
-  \item \textbf{Latency:} mean RTT rises from 0.45\,ms to 28.3\,ms, about 63 times. The wired link never exceeded 2.8\,ms, while the AP link reached 152\,ms.
-  \item \textbf{Jitter:} the AP RTT has a standard deviation of 36.7\,ms (larger than its own mean), against 0.25\,ms wired, and a mean successive difference of 32.1\,ms against 0.14\,ms. The distribution is heavy-tailed: the 95th percentile is 127.3\,ms against 0.56\,ms.
-  \item \textbf{Telemetry intervals:} wired packets arrive almost exactly every 100\,ms ($102.3\pm8.8$\,ms, with one 202\,ms outlier). Over AP the stream is bursty (Figure~1): gaps of about 200 to 320\,ms are followed by very short intervals, down to 17\,ms, as delayed packets are delivered together. The mean stays near the nominal period (120\,ms) while the standard deviation is about six times larger. The logger saw 248 distinct ESC packets in 299 ticks, so stale values were repeated during the delays.
-  \item \textbf{Command lag:} a command takes one-way delay plus up to 50\,ms for the 20\,Hz dispatch. With RTT spikes up to 150\,ms over AP, a key release or Space press can reach the robot about 0.15\,s late, which at 0.3\,m/s is roughly 4.5\,cm of extra travel.
-\end{itemize}
-Further points:
-\begin{itemize}
-  \item \textbf{Responsiveness:} wired USB is a point-to-point link with no contention, so RTT is low and tight. A 2.4/5\,GHz AP adds medium-access contention, retransmissions and power-save wake-ups, which raises the mean and, more importantly, the tail.
-  \item \textbf{Command lag:} a command reaches the robot after one-way delay plus the 20\,Hz dispatch period (up to 50\,ms) and the 100\,ms telemetry period bounds how stale the feedback is. Over AP the one-way delay variance can exceed the dispatch period, so lag becomes visibly irregular.
-  \item \textbf{Jitter:} appears as spread in $\Delta t$: a 10\,Hz stream should give $\Delta t\approx100$\,ms; late packets followed by bursts give a heavy right tail and a compensating short interval.
-  \item \textbf{Safety link:} a missed stop packet over AP is the practical risk, which is why the Space key and release timeout matter more on the wireless link.
+  \item \textbf{Responsiveness (latency).} The mean RTT rises from 0.45\,ms to 28.3\,ms, about 63 times. The wired link never exceeded 2.8\,ms; the access point reached 152\,ms. USB RNDIS is a point-to-point link with no contention. A 2.4/5\,GHz access point adds medium-access contention, retransmission and radio power-saving wake-ups, which lift the mean and, more importantly, the tail.
+  \item \textbf{Jitter.} The AP RTT has a standard deviation (36.7\,ms) larger than its own mean, and a mean successive difference of 32.1\,ms against 0.14\,ms wired. The 95th percentile is 127\,ms against 0.56\,ms. The distribution is heavy-tailed rather than Gaussian, which is why the mean alone understates the wireless problem.
+  \item \textbf{Telemetry intervals.} Wired packets arrive almost exactly every 100\,ms ($102.3\pm8.8$\,ms; the maximum of 202.5\,ms is one late packet). Over AP the stream is bursty (Figure~\ref{fig:dt}): gaps of about 200 to 320\,ms are followed by very short intervals (down to 17\,ms) as delayed packets are delivered together. The mean stays near the nominal period (120\,ms, since some packets are merged in the logger) while the standard deviation is about six times larger. The logger saw 248 distinct ESC packets in 299 ticks, so stale values were repeated during the delays, against 292 distinct packets over USB.
+  \item \textbf{Command lag.} A command travels the one-way network delay and then waits for the next 20\,Hz dispatch tick (up to 50\,ms), and the robot has to accelerate the wheels. Measured from the logs, the delay between a key press and the first wheel response averaged 0.16\,s wired and 0.19\,s over AP, with worst cases of 0.30\,s and 0.50\,s. The means differ by less than the 0.1\,s resolution, so the typical response is dominated by the robot's own acceleration and the hold-window logic; the wireless link shows up in the \emph{tail}, a half-second worst case that matters for safety.
+  \item \textbf{Safety implication.} With RTT spikes up to 152\,ms, a key release or Space press can reach the robot about 0.15\,s late; at 0.3\,m/s that is roughly 4.5\,cm of extra travel. This is why the failsafe is implemented as an immediate stop command plus an expiry of the hold window rather than relying on a single message.
 \end{itemize}
 
 \section{Problem 3: Wireless teleoperation and telemetry in ROS 2}
 
-\subsection{(i) Driver over hotspot}
+\subsection{(i) Driver initialization over the hotspot}
+With the laptop on the robot's access point the driver was started with
 \begin{Verbatim}[fontsize=\small]
 source ~/rm_setup.sh
 ros2 launch robomaster_ros ep.launch conn_type:=ap
 \end{Verbatim}
-Verification that the node initialises, advertises \texttt{/cmd\_vel}, and publishes \texttt{/odom} and \texttt{/joint\_states}:
-The driver log reports \texttt{Try to connect via ap to robot with sn None} followed by \texttt{Connected}. Running nodes: \texttt{/robomaster}, \texttt{/robot\_state\_publisher}, \texttt{/joint\_state\_publisher}. \texttt{/cmd\_vel} has one subscriber (\texttt{/robomaster}), and \texttt{/odom}, \texttt{/joint\_states}, \texttt{/imu}, \texttt{/battery}, \texttt{/tf} are advertised. Measured rates (8\,s windows, \texttt{logs/ap\_ros\_verification.txt}):
-\begin{itemize}
-  \item \texttt{/odom}: 9.8\,Hz average, with intervals between 4\,ms and 226\,ms (std 46 to 51\,ms).
-  \item \texttt{/joint\_states}: 10.2\,Hz average, intervals between 19\,ms and 101\,ms (std 12 to 14\,ms).
-\end{itemize}
-Both topics average the configured 10\,Hz. The \texttt{/odom} intervals spread much wider (4 to 226\,ms), consistent with odometry packets arriving over Wi-Fi in bursts as in Problem 2.
+The launch file starts three nodes: the driver \texttt{/robomaster}, \texttt{/robot\_state\_publisher} (from the robot description) and \texttt{/joint\_state\_publisher}. The driver log (Figure~\ref{fig:drv}) shows \texttt{Try to connect via ap to robot with sn None} followed by \texttt{Connected}, the servo configuration of the arm, the list of enabled modules, and the (optional) FFmpeg warning, which only concerns an extra video transport.
 
-\subsection{(ii) Keyboard pipeline}
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/term/driver_ap.png}
+\caption{Start of the driver log over AP (\texttt{logs/ap\_driver.log}).}\label{fig:drv}
+\end{figure}
+
+Figure~\ref{fig:ver} is the verification the assignment asks for. \texttt{/cmd\_vel} is advertised with one subscriber, the driver; \texttt{/odom}, \texttt{/joint\_states}, \texttt{/imu}, \texttt{/battery}, \texttt{/tf} and the camera topics are published. The measured rates over an 8\,s window are:
+\begin{itemize}
+  \item \texttt{/odom}: 9.8\,Hz average, with intervals between 4\,ms and 226\,ms (standard deviation 46 to 51\,ms);
+  \item \texttt{/joint\_states}: 10.2\,Hz average, intervals between 19\,ms and 101\,ms (standard deviation 12 to 14\,ms).
+\end{itemize}
+Both topics average the configured 10\,Hz. The \texttt{/odom} intervals spread much wider, consistent with the odometry packets arriving over Wi-Fi in bursts as measured in Problem~2.
+
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/term/ros_verify.png}
+\caption{Nodes, topics, \texttt{/cmd\_vel} endpoint and the measured publication rates (\texttt{logs/ap\_ros\_verification.txt}).}\label{fig:ver}
+\end{figure}
+
+\paragraph{Where \texttt{/odom} comes from.} The driver does not integrate velocities itself. In the chassis module it subscribes, through the SDK, to the robot controller's chassis position (\texttt{sub\_position}), attitude, IMU, velocity and wheel speeds (\texttt{sub\_esc}) and republishes them as \texttt{nav\_msgs/Odometry}, \texttt{sensor\_msgs/Imu} and the \texttt{odom} $\to$ \texttt{base\_link} transform. The pose is therefore the motion controller's own dead-reckoned estimate, expressed in the frame the robot had when it booted.
+
+\subsection{(ii) Keyboard telecommand pipeline}
+In a second terminal:
 \begin{Verbatim}[fontsize=\small]
-ros2 run teleop_twist_keyboard teleop_twist_keyboard \
-    --ros-args -r /cmd_vel:=/cmd_vel
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/cmd_vel
 \end{Verbatim}
-The run lasted about 289\,s with 81 \texttt{/cmd\_vel} messages (maximum $|v_x|=0.55$\,m/s, $|\omega_z|=1.0$\,rad/s), with roughly 21\,s of forward driving and 40\,s of rotation; the net heading change is $+1447^\circ$ (about four turns), from repeated in-place turns at the corners of the path. \textbf{No lateral strafing was commanded} ($\max|v_y|=0$ in the bag), so the strafing requirement of this step is not yet met. \todo{short repeat run with Shift+J / Shift+L strafing legs}
+The node publishes \texttt{geometry\_msgs/Twist} on \texttt{/cmd\_vel}: \texttt{i}/\texttt{,} forward/backward, \texttt{j}/\texttt{l} yaw, \texttt{k} stop, and Shift plus \texttt{j}/\texttt{l} (capitals) lateral strafing; the speed steps up and down with the \texttt{q}/\texttt{z} family of keys (the maximum linear command in the log is 0.55\,m/s, i.e.\ $0.5\times1.1$). The recorded run lasted 289.5\,s with 81 \texttt{/cmd\_vel} messages (maximum $|v_x|=0.55$\,m/s, $|\omega_z|=1.0$\,rad/s), with roughly 21\,s of forward or backward driving and 40\,s of rotation. The path consists of straight legs joined by in-place turns (Figure~\ref{fig:odom}), and the net heading change is $+1447^\circ$ (about four turns).
+\textbf{No lateral strafing was commanded in this run} ($\max|v_y|=0$ in the bag), so the strafing part of this step is not yet demonstrated. \todo{short repeat run with Shift+J / Shift+L strafing legs, over AP}
 
 \subsection{(iii) Telemetry acquisition}
 \begin{Verbatim}[fontsize=\small]
 ros2 bag record -o logs/bag_ap /odom /joint_states /cmd_vel
 \end{Verbatim}
-Result (\texttt{logs/ap\_bag\_info.txt}): 289.5\,s, 5804 messages, MCAP storage: \texttt{/odom} 2827 (9.8\,Hz), \texttt{/joint\_states} 2896 (10.0\,Hz), \texttt{/cmd\_vel} 81. The largest gap between consecutive \texttt{/odom} messages is 0.26\,s and only 3 gaps exceed 0.25\,s, so recording was continuous with no network stall.
-
-\subsection{(iv) State estimation and odometry trajectory}
 \begin{figure}[H]\centering
-\figorti{../figures/fig_odom.png}{0.6}{run plot\_odom.py on the bag to generate fig\_odom.png}
-\caption{Estimated 2-D trajectory from \texttt{/odom}.}
+\includegraphics[width=0.9\linewidth]{../figures/term/bag_info.png}
+\caption{Bag summary: 289.5\,s, 5804 messages in MCAP format (\texttt{ros2 bag info logs/bag\_ap}).}
 \end{figure}
-\textbf{Endpoint comparison.} Expressed in the start pose frame ($x$ forward, $y$ left), the estimated end is $(X,Y)=(0.881,\,0.447)$\,m after an integrated path length of 14.86\,m. \todo{tape-measured true end position (same frame) and the resulting error in m and as \% of path length: not measured for this run}
+The bag holds 2827 \texttt{/odom} messages (9.78\,Hz), 2896 \texttt{/joint\_states} (10.0\,Hz) and 81 \texttt{/cmd\_vel} messages. The largest gap between consecutive \texttt{/odom} messages is 0.26\,s and only three gaps exceed 0.25\,s, so data were logged continuously without network stalls. Figure~\ref{fig:bagov} compares the commanded velocities with the velocities reported in \texttt{/odom}: the reported velocity follows each command with a short delay and a smooth ramp, and the heading changes in steps at the in-place turns.
 
-\textbf{Sources of drift.}
+\begin{figure}[H]\centering
+\includegraphics[width=0.95\linewidth]{../figures/fig_bag_overview.png}
+\caption{Commanded versus odometry velocities and the heading change, from the bag.}\label{fig:bagov}
+\end{figure}
+
+\subsection{(iv) State estimation and odometry trajectory evaluation}
+The recorded \texttt{/odom} data were converted to the \emph{start-pose frame} (origin at the robot's initial position, $x$ along its initial heading, $y$ to the left), because that is how a tape measurement from the start mark is expressed; \texttt{/odom} itself uses the boot frame, so the displacement is rotated by the initial yaw.
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.75\linewidth]{../figures/fig_odom.png}
+\caption{Dead-reckoned trajectory of the ROS~2 run in the start frame.}\label{fig:odom}
+\end{figure}
+
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Samples / duration / rate & 2827 / 288.9\,s / 9.8\,Hz\\
+Integrated path length & 14.86\,m\\
+Estimated end position (start frame) & $(X,Y)=(0.881,\ 0.447)$\,m\\
+Net heading change & $+1447^\circ$\\
+Largest sample-to-sample step & 0.13\,m (no jumps)\\
+Tape-measured end position & \todo{not measured for this run}\\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Endpoint comparison.} The estimated end position is given above; the error against the true position, in metres and as a percentage of the path length, can only be filled in from a tape measurement taken at the end of a run.
+
+\paragraph{Sources of odometry drift.} Position is the running integral
+\[
+\mathbf p_{k+1}=\mathbf p_k+\mathbf R(\psi_k)\,\mathbf v_k\,\Delta t,
+\]
+and nothing ever corrects it, so its error grows with the distance travelled.
 \begin{itemize}
-  \item \textbf{Dead-reckoning integration:} pose is the running integral $\mathbf p_{k+1}=\mathbf p_k+\mathbf R(\psi_k)\mathbf v_k\Delta t$ of measured wheel velocities. Each step's error is never corrected, so position error grows without bound, and heading error is the worst contributor because it rotates every later displacement: a heading error $\delta\psi$ yields a lateral position error of about $d\,\delta\psi$ after travelling distance $d$.
-  \item \textbf{Mecanum roller slip:} the lateral and yaw motions rely on rollers sliding at 45$^\circ$, so wheel rotation is only loosely tied to ground displacement. Strafing and rotating slip much more than driving straight, and the effective wheel radius changes with the contact point on the rollers. Wheel encoders measure the wheel, not the ground, so slip is invisible to odometry.
-  \item \textbf{Model and discretisation errors:} the nominal $R$, $l_x$, $l_y$ differ from the real values (tyre wear, load), and 10\,Hz sampling with first-order integration ignores motion within a step during turns. Accelerations cause transient slip too.
-  \item \textbf{Sensing noise:} gyro bias and encoder quantisation add a slowly growing error, and any late or dropped \texttt{/odom} packet over Wi-Fi coarsens the integration step.
+  \item \textbf{Dead-reckoning integration and heading error.} A heading error $\delta\psi$ rotates every later displacement, so it produces a lateral error of about $d\,\delta\psi$ after travelling a distance $d$. For this run: one degree of heading error ($1.7\times10^{-2}$\,rad) already gives 1.7\,cm of lateral error per metre, and 26\,cm if it existed over the whole 14.9\,m path. The run contains about four in-place turns, each of which can add a small heading error.
+  \item \textbf{Mecanum roller slip.} The lateral and yaw motions of a mecanum platform rely on the rollers sliding at $45^\circ$, so wheel rotation is only loosely tied to ground displacement, and encoders measure the wheel, not the ground, so slip is invisible to odometry. The logs show a direct sign of it: in the steady parts of the strafe commands (D or A) the front wheels ran at about 62 to 69\,rpm while the rear wheels ran at about 49 to 56\,rpm in both the wired and AP logs (Table~\ref{tab:pattern}), although the kinematics predicts equal speeds of 57.3\,rpm. Driving straight, all four wheels were within a few rpm of each other.
+  \item \textbf{Model and discretization errors.} The nominal radius and geometry ($R$, $l_x$, $l_y$) differ from the real values (tyre wear, load), and sampling at 10\,Hz with first-order integration ignores the motion inside a step during turns and accelerations.
+  \item \textbf{Sensing noise and bias.} Gyro bias and encoder quantization add a slowly growing error, and a late or dropped \texttt{/odom} packet over Wi-Fi (gaps up to 0.26\,s here) coarsens the integration step.
 \end{itemize}
 
-\section{Problem 4: Theory and diagnostics}
+\section{Problem 4: Theoretical formulation and system diagnostics}
 
-\subsection{(i) Network topology characterisation}
-Qualitative rows follow from the topologies; measured rows come from the runs above.
-
+\subsection{(i) Network topology characterization}
 \begin{table}[H]\centering\small\raggedright
 \begin{tabular}{@{}p{3.2cm}p{5.6cm}p{5.6cm}@{}}
 \toprule
@@ -202,21 +411,21 @@ Host internet retained? & Yes (observed: the Wi-Fi stayed connected while the US
 Multi-robot scalability & Poor. One cable and one USB interface per robot, and every robot uses the same 192.168.42.2 subnet, so they collide on one host without extra isolation. & Poor. A host Wi-Fi adapter joins one AP at a time and every robot AP uses 192.168.2.1, so one adapter serves one robot.\\
 \bottomrule
 \end{tabular}
-\caption{Physical connection topology comparison.}
+\caption{Physical connection topology comparison. All numbers are the measured ones of Problem~2 and the host captures of Figures~\ref{fig:rndislink} and~\ref{fig:hostap}.}
 \end{table}
+\paragraph{Reading the table.} The wired link is the better choice for development and for anything latency-sensitive: sub-millisecond RTT, no packet bursts, and the laptop keeps its Internet connection (useful for installing packages, or for talking to a remote tool while the robot is attached). Its drawbacks are the cable itself, which limits the robot's range and proved to be the weak point in practice (a marginal connection caused an enumeration failure during one attempt), and that every robot presents the same address. The hotspot gives untethered operation but trades latency (63 times higher RTT) and jitter (a heavy tail up to 152\,ms) for it, loses Internet access on a single-radio laptop, and cannot scale to several robots from one adapter. Router-based operation (STA mode) would remove the multi-robot and Internet limits but depends on the building network and was excluded by the assignment.
 
 \subsection{(ii) Mecanum kinematic derivation}
-\textbf{Setup.} Body frame: $x$ forward, $y$ left, $\omega_z$ counter-clockwise (as in Figure~1 of the assignment). Wheel $i$ has radius $R$ and angular velocity $\omega_i$ (positive drives the vehicle forward) and sits at $(x_i,y_i)$ with $x_i=\pm l_x$, $y_i=\pm l_y$:
-\[
-\text{FL}=(+l_x,+l_y),\quad \text{FR}=(+l_x,-l_y),\quad \text{RL}=(-l_x,+l_y),\quad \text{RR}=(-l_x,-l_y).
-\]
-Rollers sit at angle $\gamma_i=\pm45^\circ$ to the wheel's driving direction (the standard RoboMaster layout: FL and RR have one roller handedness, FR and RL the other). The figure does not draw rollers, so this is the assumed layout.
+\begin{figure}[H]\centering
+\includegraphics[width=0.62\linewidth]{../figures/fig_mecanum_geometry.png}
+\caption{Geometry used in the derivation: body frame ($x$ forward, $y$ left, $\omega_z$ counter-clockwise), half-wheelbase $l_x$, half-track $l_y$, and the assumed roller axes. This corrects the assignment's Figure~1 in one respect: there the wheel labels are drawn as if the robot faced up the page while the $x$ axis points right; here the front is drawn explicitly.}
+\end{figure}
+\textbf{Setup.} Wheel $i$ has radius $R$, angular velocity $\omega_i$ (positive drives the vehicle forward) and sits at $(x_i,y_i)$ with $x_i=\pm l_x$ and $y_i=\pm l_y$: $\mathrm{FL}=(+l_x,+l_y)$, $\mathrm{FR}=(+l_x,-l_y)$, $\mathrm{RL}=(-l_x,+l_y)$, $\mathrm{RR}=(-l_x,-l_y)$. The rollers sit at angle $\gamma_i=\pm45^\circ$ to the wheel's driving direction (the standard RoboMaster layout: FL and RR have one roller handedness, FR and RL the other). The figure in the assignment does not draw rollers, so this layout is an assumption, and it is checked against the measured wheel patterns below.
 
-\textbf{Step 1: velocity of the contact point.} For a rigid body twist $\mathbf v_b=[v_x,v_y,\omega_z]^T$ the velocity of the point at $(x_i,y_i)$ is
+\textbf{Step 1: velocity of the contact point.} For the body twist $\mathbf v_b=[v_x,v_y,\omega_z]^T$ the velocity of the point at $(x_i,y_i)$ is
 \[
 \mathbf v_i=\begin{bmatrix}v_x-\omega_z y_i\\ v_y+\omega_z x_i\end{bmatrix}.
 \]
-
 \textbf{Step 2: wheel and roller constraint.} The contact point moves with the rim speed $u_i=R\omega_i$ along the wheel's driving direction $\hat{\mathbf x}$, plus a free sliding speed $s_i$ along the roller axis $\mathbf r_i=(\cos\gamma_i,\sin\gamma_i)$:
 \[
 \mathbf v_i=u_i\hat{\mathbf x}+s_i\mathbf r_i .
@@ -225,12 +434,11 @@ The $y$ component gives $s_i=v_{iy}/\sin\gamma_i$. Substituting into the $x$ com
 \[
 R\omega_i=u_i=v_{ix}-v_{iy}\cot\gamma_i,\qquad \sigma_i:=\cot\gamma_i=\pm1 .
 \]
-
 \textbf{Step 3: insert the contact velocity.}
 \[
 R\omega_i=v_x-\sigma_i v_y-\omega_z\,(y_i+\sigma_i x_i).
 \]
-With $\sigma=(+1,-1,-1,+1)$ for (FL, FR, RL, RR), every term $y_i+\sigma_i x_i$ equals $\pm(l_x+l_y)$. Define $k=l_x+l_y$:
+With $\sigma=(+1,-1,-1,+1)$ for (FL, FR, RL, RR), every term $y_i+\sigma_i x_i$ equals $\pm(l_x+l_y)$. Defining $k=l_x+l_y$:
 \[
 \begin{aligned}
 \omega_{fl}&=\tfrac1R\,(v_x-v_y-k\,\omega_z), &
@@ -239,47 +447,164 @@ With $\sigma=(+1,-1,-1,+1)$ for (FL, FR, RL, RR), every term $y_i+\sigma_i x_i$ 
 \omega_{rr}&=\tfrac1R\,(v_x-v_y+k\,\omega_z).
 \end{aligned}
 \]
-
 \textbf{Inverse kinematics.}
 \[
-\mathbf J_{IK}=\frac1R\begin{bmatrix}1&-1&-k\\1&\;\;1&\;\;k\\1&\;\;1&-k\\1&-1&\;\;k\end{bmatrix}
+\begin{bmatrix}\omega_{fl}\\\omega_{fr}\\\omega_{rl}\\\omega_{rr}\end{bmatrix}=\mathbf J_{IK}\begin{bmatrix}v_x\\v_y\\\omega_z\end{bmatrix},\qquad
+\mathbf J_{IK}=\frac1R\begin{bmatrix}1&-1&-k\\1&\;\;1&\;\;k\\1&\;\;1&-k\\1&-1&\;\;k\end{bmatrix}.
 \]
-
-\textbf{Forward kinematics.} $\mathbf J_{IK}$ is $4\times3$ with full column rank, so the least-squares inverse is the pseudo-inverse $\mathbf J_{FK}=(\mathbf J_{IK}^T\mathbf J_{IK})^{-1}\mathbf J_{IK}^T$. Its three columns $\mathbf c_1=(1,1,1,1)$, $\mathbf c_2=(-1,1,1,-1)$, $\mathbf c_3=(-k,k,-k,k)$ (up to the factor $1/R$) are mutually orthogonal: $\mathbf c_1\!\cdot\!\mathbf c_2=0$, $\mathbf c_1\!\cdot\!\mathbf c_3=0$, $\mathbf c_2\!\cdot\!\mathbf c_3=k+k-k-k=0$. Hence
+\textbf{Forward kinematics.} $\mathbf J_{IK}$ is $4\times3$ with full column rank, so the least-squares inverse is the pseudo-inverse $\mathbf J_{FK}=(\mathbf J_{IK}^T\mathbf J_{IK})^{-1}\mathbf J_{IK}^T$. The three columns $\mathbf c_1=(1,1,1,1)$, $\mathbf c_2=(-1,1,1,-1)$, $\mathbf c_3=(-k,k,-k,k)$ (up to the factor $1/R$) are mutually orthogonal: $\mathbf c_1\!\cdot\!\mathbf c_2=0$, $\mathbf c_1\!\cdot\!\mathbf c_3=0$, $\mathbf c_2\!\cdot\!\mathbf c_3=k+k-k-k=0$, with $\|\mathbf c_1\|^2=\|\mathbf c_2\|^2=4$ and $\|\mathbf c_3\|^2=4k^2$. Hence
 \[
 \mathbf J_{IK}^T\mathbf J_{IK}=\frac1{R^2}\operatorname{diag}(4,\,4,\,4k^2),
 \]
-which gives
 \[
-\mathbf J_{FK}=\frac R4\begin{bmatrix}1&1&1&1\\-1&1&1&-1\\-\tfrac1k&\tfrac1k&-\tfrac1k&\tfrac1k\end{bmatrix},\qquad
-\begin{aligned}v_x&=\tfrac R4(\omega_{fl}+\omega_{fr}+\omega_{rl}+\omega_{rr})\\
-v_y&=\tfrac R4(-\omega_{fl}+\omega_{fr}+\omega_{rl}-\omega_{rr})\\
-\omega_z&=\tfrac R{4k}(-\omega_{fl}+\omega_{fr}-\omega_{rl}+\omega_{rr}).\end{aligned}
+\begin{bmatrix}v_x\\v_y\\\omega_z\end{bmatrix}=\mathbf J_{FK}\begin{bmatrix}\omega_{fl}\\\omega_{fr}\\\omega_{rl}\\\omega_{rr}\end{bmatrix},\qquad
+\mathbf J_{FK}=\frac R4\begin{bmatrix}1&1&1&1\\-1&1&1&-1\\-\tfrac1k&\tfrac1k&-\tfrac1k&\tfrac1k\end{bmatrix}.
 \]
-\textbf{Check.} $\mathbf J_{FK}\mathbf J_{IK}=\mathbf I_3$. For example, the $(1,1)$ entry is $\tfrac R4\cdot\tfrac1R(1+1+1+1)=1$ and the $(3,3)$ entry is $\tfrac R{4k}\cdot\tfrac1R(k+k+k+k)=1$. $\mathbf J_{IK}\mathbf J_{FK}\neq\mathbf I_4$: four wheels span only a 3-D twist space, and the left-over direction $(1,-1,-1,1)$ is a wheel-speed combination that produces no body motion, which is why wheels fighting each other show up as slip.
+\textbf{Checks.} $\mathbf J_{FK}\mathbf J_{IK}=\mathbf I_3$: for example the $(1,1)$ entry is $\tfrac R4\cdot\tfrac1R(1+1+1+1)=1$ and the $(3,3)$ entry is $\tfrac R{4k}\cdot\tfrac1R(k+k+k+k)=1$. The product the other way, $\mathbf J_{IK}\mathbf J_{FK}$, is only a rank-3 projector and not $\mathbf I_4$: four wheels span a 3-D twist space, and the left-over wheel-speed direction is $\mathbf n=\tfrac12(1,1,-1,-1)$ in the order (FL, FR, RL, RR), i.e.\ the two front wheels forward and the two rear wheels backward, which produces no body motion and is how wheels ``fight'' each other and cause slip. The numerical check below confirms $\mathbf J_{FK}\mathbf n=\mathbf 0$.
 
-\textbf{Sanity checks.} Forward: all wheels $+v_x/R$. Strafe left ($v_y>0$): FL and RR spin backward, FR and RL forward. Rotation ($\omega_z>0$, CCW): left wheels backward, right wheels forward. All match the known mecanum behaviour.
+\textbf{Numbers.} Nominal RoboMaster EP values: $R=0.05$\,m, $l_x=l_y=0.10$\,m, hence $k=0.20$\,m. Then
+\[
+\mathbf J_{IK}=\begin{bmatrix}20&-20&-4\\20&20&4\\20&20&-4\\20&-20&4\end{bmatrix},\qquad
+\mathbf J_{FK}=\begin{bmatrix}0.0125&0.0125&0.0125&0.0125\\-0.0125&0.0125&0.0125&-0.0125\\-0.0625&0.0625&-0.0625&0.0625\end{bmatrix},
+\]
+and the singular values of $\mathbf J_{IK}$ are $40,\ 40,\ 8$, so the matrix is well conditioned (condition number 5). The nominal dimensions should be confirmed against the datasheet.
 
-\textbf{Numbers.} Nominal RoboMaster EP values (confirm against the datasheet before quoting): $R=0.05$\,m, $l_x=l_y=0.10$\,m, so $k=0.20$\,m.
-Conversion to the SDK convention ($y$ right, $\omega_z$ clockwise): $v_y^{\rm SDK}=-v_y$, $\omega_z^{\rm SDK}=-\omega_z$.
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/term/kin.png}
+\caption{Numerical check of the derivation (\texttt{scripts/kinematics\_check.py}): the pseudo-inverse equals the closed form to $10^{-17}$, $\mathbf J_{FK}\mathbf J_{IK}=\mathbf I_3$, the null direction is $(1,1,-1,-1)/2$, and 1000 random twists round-trip with error below $3\times10^{-15}$.}
+\end{figure}
+
+\paragraph{Comparison with the measured wheel speeds.} The prediction was checked against the logs of Problem~2. Table~\ref{tab:pattern} lists the mean ESC speeds in the steady part of single-key commands. The ESC speeds are \emph{motor-signed}: the left-side motors (FL and RL) read opposite to the right-side ones for the same vehicle motion, e.g.\ driving forward gives $+54$ and $+55$\,rpm on FR and RR but $-55$ and $-60$\,rpm on FL and RL. After flipping the sign of the left wheels the logged order (FR, FL, RL, RR) reproduces the predicted pattern for both forward ($+,+,+,+$) and strafing (FR $-$, FL $+$, RL $-$, RR $+$ for D), which confirms the assumed roller layout and wheel order. The forward magnitude (54 to 60\,rpm) is within 6\,\% of the predicted $v/R=57.3$\,rpm.
+
+\begin{table}[H]\centering\small
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+\textbf{Log} & \textbf{Steady command} & \textbf{FR} & \textbf{FL} & \textbf{RL} & \textbf{RR} (rpm)\\
+\midrule
+prediction (sign-corrected, 57.3 rpm) & W & $+57.3$ & $+57.3$ & $+57.3$ & $+57.3$\\
+prediction & D (strafe right) & $-57.3$ & $+57.3$ & $-57.3$ & $+57.3$\\
+\midrule
+wired, raw ESC & W or S ($v_x>0$) & $+54.1$ & $-54.6$ & $-59.6$ & $+54.9$\\
+wired, left sign flipped & W & $+54.1$ & $+54.6$ & $+59.6$ & $+54.9$\\
+wired, raw ESC & D & $-61.8$ & $-64.1$ & $+51.2$ & $+50.5$\\
+wired, left sign flipped & D & $-61.8$ & $+64.1$ & $-51.2$ & $+50.5$\\
+\midrule
+AP, raw ESC & D & $-62.7$ & $-65.3$ & $+56.6$ & $+52.4$\\
+AP, left sign flipped & D & $-62.7$ & $+65.3$ & $-56.6$ & $+52.4$\\
+\bottomrule
+\end{tabular}
+\caption{Predicted versus measured wheel speeds (means over rows at least 0.5\,s into a single-key command; $n=10$ to $58$ rows each). The strafe magnitudes differ between front (62 to 65\,rpm) and rear (51 to 57\,rpm) wheels, an indication of roller slip.}\label{tab:pattern}
+\end{table}
 
 \subsection{(iii) ROS 2 coordinate transform inspection}
-\texttt{ros2 run tf2\_tools view\_frames} was run with the driver up.
-\begin{figure}[H]\centering
-\figorti{../figures/frames.pdf}{1.0}{attach frames.pdf generated by view\_frames and save it as figures/frames.pdf}
-\caption{TF tree generated by \texttt{tf2\_tools view\_frames} (vector PDF, zoom in for detail).}
-\end{figure}
-Parent and child links, read from the generated tree (\texttt{figures/frames.pdf}) and \texttt{ros2 topic info /tf -v}, which lists exactly two publishers of \texttt{/tf}:
-\begin{itemize}
-  \item \texttt{odom} $\to$ \texttt{base\_link}: the only dynamic link at the top of the tree, published at about 10\,Hz by the driver node \texttt{/robomaster} (its chassis module, from the dead-reckoned pose). \texttt{odom} is the root of the tree.
-  \item \texttt{base\_link} $\to$ \texttt{chassis\_base\_link}: a fixed (static) link from the robot description, published by \texttt{/robot\_state\_publisher}.
-  \item \texttt{chassis\_base\_link} $\to$ \texttt{arm\_base\_link}: a fixed (static) link (\texttt{arm\_base\_joint}, offset $(0,\,0.0010,\,0.0906)$\,m), also published by \texttt{/robot\_state\_publisher}.
-\end{itemize}
-Beyond these, \texttt{/robot\_state\_publisher} also publishes the moving links, driven by \texttt{/joint\_states}: the four wheel links (children of \texttt{chassis\_base\_link}) and the arm and gripper chain (\texttt{arm\_base\_link} $\to$ \texttt{arm\_1\_link} $\to$ \texttt{arm\_2\_link} $\to$ \ldots), each at about 10\,Hz. Sensor, LED and camera frames hang off \texttt{chassis\_base\_link} and \texttt{arm\_2\_link} as fixed links.
+\texttt{ros2 run tf2\_tools view\_frames} was run with the driver up. Figure~\ref{fig:tfchain} summarizes the tree and the full diagram follows on its own page. \texttt{ros2 topic info /tf -v} (Figure~\ref{fig:tfinfo}) lists exactly two publishers of \texttt{/tf}: the driver node \texttt{/robomaster} and \texttt{/robot\_state\_publisher}.
 
-\section*{Deliverables}
+\begin{figure}[H]\centering
+\begin{tikzpicture}[>=Stealth, every node/.style={font=\scriptsize}]
+  \tikzset{fr/.style={draw, rounded corners, minimum height=0.6cm, inner sep=3pt}}
+  \node[fr, fill=orange!20] (odom) at (0,0) {\texttt{odom}};
+  \node[fr, fill=orange!20] (base) at (2.6,0) {\texttt{base\_link}};
+  \node[fr] (chassis) at (6.0,0) {\texttt{chassis\_base\_link}};
+  \node[fr] (arm) at (9.7,0) {\texttt{arm\_base\_link}};
+  \node[fr] (a1) at (12.9,0) {\texttt{arm\_1\_link}};
+  \node[fr] (a2) at (12.9,-1.7) {\texttt{arm\_2\_link}};
+  \node[fr] (cam) at (9.7,-1.7) {\texttt{camera\_link}};
+  \node[fr] (opt) at (6.0,-1.7) {\texttt{camera\_optical\_link}};
+  \node[fr, align=center] (wh) at (1.6,-1.7) {four wheel links\\(10\,Hz, from \texttt{/joint\_states})};
+  \node[fr, align=center] (sens) at (1.6,-3.1) {hit-sensor, LED, controller,\\extension links (static)};
+  \draw[->, thick, orange!70!black] (odom) -- (base);
+  \node[above, orange!60!black] at (1.3,0.05) {dynamic, 10\,Hz};
+  \node[below, orange!60!black] at (1.3,-0.05) {\texttt{/robomaster}};
+  \draw[->] (base) -- (chassis); \node[above] at (4.3,0.02) {static};
+  \draw[->] (chassis) -- (arm);  \node[above] at (7.85,0.02) {static};
+  \draw[->] (arm) -- (a1); \draw[->] (a1) -- (a2); \draw[->] (a2) -- (cam); \draw[->] (cam) -- (opt);
+  \draw[->] (chassis.south west) -- (wh.north east);
+  \draw[->] (chassis.south west) to[bend right=18] (sens.north east);
+\end{tikzpicture}
+\caption{Condensed TF tree (orange: published by the driver; the rest by \texttt{robot\_state\_publisher} from the robot description and \texttt{/joint\_states}).}\label{fig:tfchain}
+\end{figure}
+
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Parent} & \textbf{Child} & \textbf{Type} & \textbf{Published by}\\
+\midrule
+\texttt{odom} & \texttt{base\_link} & dynamic, 10.1\,Hz & driver node \texttt{/robomaster} (chassis module)\\
+\texttt{base\_link} & \texttt{chassis\_base\_link} & static & \texttt{/robot\_state\_publisher}\\
+\texttt{chassis\_base\_link} & \texttt{arm\_base\_link} & static (fixed joint, offset $(0,\,0.0010,\,0.0906)$\,m) & \texttt{/robot\_state\_publisher}\\
+\texttt{chassis\_base\_link} & four wheel links & dynamic, 10.2\,Hz & \texttt{/robot\_state\_publisher} (from \texttt{/joint\_states})\\
+\texttt{arm\_base\_link} & \texttt{arm\_1\_link}, \ldots & dynamic, 10.2\,Hz & \texttt{/robot\_state\_publisher}\\
+\bottomrule
+\end{tabular}
+\end{center}
+There is no direct \texttt{base\_link} $\to$ \texttt{arm\_base\_link} transform: the arm is attached to the chassis through the chain \texttt{base\_link} $\to$ \texttt{chassis\_base\_link} $\to$ \texttt{arm\_base\_link}. \texttt{odom} is the root of the tree. (An extra observation, used in Assessment~2: the robot description attaches the camera to the arm, but images show that the real camera does not move with the arm, so this part of the TF tree should not be used for geometry.)
+
+\begin{figure}[H]\centering
+\includegraphics[width=\linewidth]{../figures/term/tf_info.png}
+\caption{Publishers of \texttt{/tf} (\texttt{logs/ap\_tf\_info.txt}).}\label{fig:tfinfo}
+\end{figure}
+
+\begin{landscape}
+\begin{figure}[p]\centering
+\includegraphics[width=0.97\linewidth,height=0.78\linewidth,keepaspectratio]{../figures/frames.pdf}
+\caption{The TF tree generated by \texttt{tf2\_tools view\_frames} (vector PDF; zoom in for the broadcaster, rate and buffer data on every edge).}
+\end{figure}
+\end{landscape}
+
+\section{Deliverables checklist}
+\begin{center}\small
+\begin{tabular}{@{}p{7.4cm}p{3.1cm}p{5.0cm}@{}}
+\toprule
+\textbf{Item} & \textbf{Status} & \textbf{Where}\\
+\midrule
+System diagnostics (kernel, Python, ROS 2, NumPy) & done & Figures~\ref{fig:diag}, \ref{fig:install}, \ref{fig:env}\\
+NumPy ABI analysis and isolation method & done, reproduced & Figure~\ref{fig:np2}, Figure~\ref{fig:env}\\
+Wired and AP latency plots (telemetry $\Delta t$, ping RTT) & done & Section~\ref{sec:lat}\\
+Reconstructed odometry trajectory ($X$ vs $Y$) & done; error needs a tape measurement & Figure~\ref{fig:odom}\\
+Table of topology comparison & done & Problem 4(i)\\
+Derivation of $\mathbf J_{IK}$, $\mathbf J_{FK}$ & done, verified & Problem 4(ii)\\
+TF tree and explanation & done & Problem 4(iii)\\
+\texttt{ep\_teleop\_sdk.py}, \texttt{rm\_setup.sh}, raw CSV logs & done & repository, Appendices A and B\\
+ROS 2 run with lateral strafing and measured end position & \todo{open} & Problem 3(ii), 3(iv)\\
+Video (a) SDK teleoperation, (b) ROS 2 teleoperation over AP & to be added & \videolinkone{} and \videolinktwo{} (edit the boxes at the top of the source)\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Discussion and limitations}
 \begin{itemize}
-  \item D1: this report. D2: \texttt{ep\_teleop\_sdk.py}, \texttt{rm\_setup.sh}, \texttt{scripts/}, raw CSV logs, ROS bag. D3: video link \videolinkone{} (SDK teleop with live telemetry) and \videolinktwo{} (ROS 2 teleop over AP with \texttt{/odom} echoed).
+  \item \textbf{Each configuration was measured once.} The wired and AP runs are single 30\,s logs and one 100-packet ping per link; the ranges quoted (for example the 152\,ms maximum) describe those runs, and a Wi-Fi link in a different environment would give different tails.
+  \item \textbf{Time resolution.} The telemetry is logged at 10\,Hz, so response delays have a resolution of 0.1\,s, and means of 0.16\,s and 0.19\,s should not be over-interpreted; the 0.30\,s versus 0.50\,s worst cases are the more reliable difference.
+  \item \textbf{Wheel order.} The assumption that the SDK's ESC order is FR, FL, RL, RR was verified from the data (Table~\ref{tab:pattern}).
+  \item \textbf{Nominal dimensions.} The wheel radius and chassis half-dimensions used in the numerical examples are the nominal EP values, not measured on this robot.
+  \item \textbf{Open items.} A ROS~2 run with lateral strafing, the tape-measured end position for the odometry error, and the two demonstration videos.
 \end{itemize}
+
+\appendix
+\section{Listing of \texttt{ep\_teleop\_sdk.py}}
+{\VerbatimInput[numbers=left,numbersep=4pt,fontsize=\tiny]{../ep_teleop_sdk.py}}
+
+\section{Listing of \texttt{rm\_setup.sh}}
+{\VerbatimInput[numbers=left,numbersep=4pt,fontsize=\small]{../rm_setup.sh}}
+
+\section{Repository layout and commands}
+\begin{Verbatim}[fontsize=\footnotesize]
+Assignment 1/
+  ep_teleop_sdk.py            keyboard teleoperation + 10 Hz telemetry (SDK only)
+  rm_setup.sh                 environment loader
+  run_ap_all.sh               scripted AP session
+  scripts/                    ping_bench.sh, analyze_telemetry.py, plot_odom.py,
+                              command_lag.py, kinematics_check.py, make_report_figs.py, term_shot.py
+  logs/                       rndis_run.csv, ap_run.csv, ping_*.txt, bag_ap/, captures/ (real command output)
+  figures/                    plots, term/ (terminal captures), frames.pdf
+  report/report.tex           this report
+\end{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
+python ep_teleop_sdk.py --conn rndis --duration 30 --out logs/rndis_run.csv
+python ep_teleop_sdk.py --conn ap    --duration 30 --out logs/ap_run.csv
+python scripts/analyze_telemetry.py --rndis-csv logs/rndis_run.csv --ap-csv logs/ap_run.csv \
+       --rndis-ping logs/ping_rndis.txt --ap-ping logs/ping_ap.txt --out figures
+python scripts/make_report_figs.py        # all figures of this report (needs the ROS environment)
+\end{Verbatim}
 
 \end{document}

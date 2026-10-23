@@ -1,0 +1,29 @@
+$ python3 -m venv --system-site-packages /tmp/np2_test_venv      # throwaway copy of the setup
+$ source /tmp/np2_test_venv/bin/activate && pip install -U numpy
+Successfully installed numpy-2.5.4
+$ python -c "import cv2; print(cv2.__version__)"
+
+A module that was compiled using NumPy 1.x cannot be run in
+NumPy 2.5.4 as it may crash. To support both 1.x and 2.x
+versions of NumPy, modules must be compiled with NumPy 2.0.
+Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
+
+If you are a user of the module, the easiest solution will be to
+downgrade to 'numpy<2' or try to upgrade the affected module.
+We expect that some modules will need time to support NumPy 2.
+
+Traceback (most recent call last):  File "<string>", line 1, in <module>
+Traceback (most recent call last):
+  File "/tmp/claude-1000/-home-ameen/a2177dce-da11-460a-a226-214e03159ec5/scratchpad/venv_np2/lib/python3.12/site-packages/numpy/core/_multiarray_umath.py", line 46, in __getattr__
+    raise ImportError(msg)
+$ python -c "from cv_bridge import CvBridge"
+
+A module that was compiled using NumPy 1.x cannot be run in
+NumPy 2.5.4 as it may crash. To support both 1.x and 2.x
+versions of NumPy, modules must be compiled with NumPy 2.0.
+Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
+
+If you are a user of the module, the easiest solution will be to
+downgrade to 'numpy<2' or try to upgrade the affected module.
+We expect that some modules will need time to support NumPy 2.
+

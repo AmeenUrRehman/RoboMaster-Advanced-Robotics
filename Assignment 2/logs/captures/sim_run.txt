@@ -1,0 +1,11 @@
+$ python -m rm_flatness_nav.sim --distance 1.0 --lateral 0.1 --heading-deg 60 --detect-range 1.2 --min-range 0.6   # SIMULATION
+SIMULATION: final state ARRIVED (trajectory end, tag out of view), distance to tag 0.183 m
+         0       0.456      -0.456      -0.456       0.456   SEARCHING
+         1       0.456      -0.456      -0.456       0.456   SEARCHING
+         2       0.456      -0.456      -0.456       0.456   SEARCHING
+         3       0.456      -0.456      -0.456       0.456   SEARCHING
+         4       0.456      -0.456      -0.456       0.456   SEARCHING
+         5       0.456      -0.456      -0.456       0.456   SEARCHING
+       ...         ...         ...         ...         ...         ...
+        25       0.236       0.236       0.236       0.236     CHASING
+      25.9       0.000       0.000       0.000       0.000  ARRIVED (trajectory end, tag out of view)

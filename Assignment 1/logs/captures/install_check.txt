@@ -1,0 +1,24 @@
+$ ls ~/ros2_ws/src
+robomaster_ros
+$ colcon list --base-paths ~/ros2_ws/src
+robomaster_description	/home/ameen/ros2_ws/src/robomaster_ros/robomaster_description	(ros.ament_cmake)
+robomaster_msgs	/home/ameen/ros2_ws/src/robomaster_ros/robomaster_msgs	(ros.ament_cmake)
+robomaster_ros	/home/ameen/ros2_ws/src/robomaster_ros/robomaster_ros	(ros.ament_python)
+$ ls ~/ros2_ws/install
+COLCON_IGNORE
+local_setup.bash
+local_setup.ps1
+local_setup.sh
+_local_setup_util_ps1.py
+_local_setup_util_sh.py
+local_setup.zsh
+robomaster_description
+robomaster_msgs
+robomaster_ros
+$ dpkg -l | grep -E "ros-jazzy-(desktop-full|ros-gz )"
+ii ros-jazzy-desktop-full 0.11.0-1noble.20261006.041807
+ii ros-jazzy-ros-gz 1.0.24-1noble.20261006.041805
+$ dpkg -l | grep -E "libopus-dev|python3-colcon-common-extensions|python3-pip "
+ii libopus-dev:amd64 1.4-1build1
+ii python3-colcon-common-extensions 0.3.0-100
+ii python3-pip 24.0+dfsg-1ubuntu1.3

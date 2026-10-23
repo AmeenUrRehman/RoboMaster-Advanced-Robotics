@@ -1,0 +1,33 @@
+$ source ~/rm_setup.sh
+$ which python
+/home/ameen/rm_venv/bin/python
+$ python --version
+Python 3.12.3
+$ echo $PYTHONNOUSERSITE
+1
+$ echo $PYTHONPATH | tr : "\n" | head -6
+/home/ameen/rm_venv/lib/python3.12/site-packages
+/opt/ros/jazzy/lib/python3.12/site-packages
+/home/ameen/ros2_ws/build/robomaster_ros
+/home/ameen/ros2_ws/install/robomaster_ros/lib/python3.12/site-packages
+/home/ameen/ros2_ws/install/robomaster_msgs/lib/python3.12/site-packages
+/opt/ros/jazzy/opt/gz_sim_vendor/lib/python
+$ python -c "import numpy, cv2, rclpy, cv_bridge, robomaster"
+numpy 1.26.4 /usr/lib/python3/dist-packages/numpy/__init__.py
+cv2 4.6.0
+rclpy, cv_bridge, robomaster: import OK
+$ python -m pip list 2>/dev/null | grep -iE "^(numpy|numpy-quaternion|pyyaml|robomaster|rm_libmedia_codec) "
+numpy                                1.26.4
+numpy-quaternion                     2024.0.13
+PyYAML                               6.0.1
+rm_libmedia_codec                    0.0.1
+robomaster                           0.1.2.0
+$ ros2 pkg list | grep -E "robomaster|teleop_twist_keyboard"
+robomaster_description
+robomaster_msgs
+robomaster_ros
+teleop_twist_keyboard
+$ echo $ROS_DISTRO
+jazzy
+$ gz sim --version
+Gazebo Sim, version 8.15.0

@@ -1,0 +1,27 @@
+$ python -m pytest -v src/rm_flatness_nav/test
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-7.4.4, pluggy-1.4.0 -- /home/ameen/rm_venv/bin/python
+rootdir: /home/ameen/robomasters/assignment2/ws/src/rm_flatness_nav
+plugins: colcon-core-0.21.3, cov-4.1.0
+collecting ... collected 18 items
+
+test/test_core.py::test_polynomial_meets_boundary_conditions PASSED [  5%]
+test/test_core.py::test_time_horizon_formula_and_floor PASSED [ 11%]
+test/test_core.py::test_straight_trajectory_has_zero_turn_rate_and_limited_speed PASSED [ 16%]
+test/test_core.py::test_flat_inversion_circle PASSED [ 22%]
+test/test_core.py::test_flat_inversion_standstill_is_finite PASSED [ 27%]
+test/test_core.py::test_wheel_rates_eq4 PASSED       [ 33%]
+test/test_core.py::test_voltage_model_eq5 PASSED     [ 38%]
+test/test_core.py::test_fsm_search_turns_toward_last_seen_side PASSED [ 44%]
+test/test_core.py::test_fsm_aligns_in_place_before_chasing PASSED [ 50%]
+test/test_core.py::test_fsm_brake_on_camera_and_tof PASSED [ 55%]
+test/test_core.py::test_fsm_chase_speed_within_limit PASSED [ 61%]
+test/test_core.py::test_fsm_loss_before_chase_returns_to_search PASSED [ 66%]
+test/test_core.py::test_fsm_tag_leaving_image_during_chase_keeps_following_trajectory PASSED [ 72%]
+test/test_core.py::test_fsm_blind_chase_can_be_disabled PASSED [ 77%]
+test/test_detector.py::test_detects_and_recovers_ground_range_and_bearing[0.7-0.0] PASSED [ 83%]
+test/test_detector.py::test_detects_and_recovers_ground_range_and_bearing[0.7-0.1] PASSED [ 88%]
+test/test_detector.py::test_detects_and_recovers_ground_range_and_bearing[0.7--0.1] PASSED [ 94%]
+test/test_detector.py::test_ignores_other_tag_ids PASSED [100%]
+
+============================== 18 passed in 0.71s ==============================

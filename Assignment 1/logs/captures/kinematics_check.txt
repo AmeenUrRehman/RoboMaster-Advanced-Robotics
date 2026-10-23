@@ -1,0 +1,32 @@
+$ python kinematics_check.py      # R=0.05 m, lx=0.1 m, ly=0.1 m, k=lx+ly=0.2 m   (wheel order FL, FR, RL, RR)
+J_IK (rad/s per [m/s, m/s, rad/s]) =
+[[ 20. -20.  -4.]
+ [ 20.  20.   4.]
+ [ 20.  20.  -4.]
+ [ 20. -20.   4.]]
+J_FK from pinv(J_IK) =
+[[ 0.0125  0.0125  0.0125  0.0125]
+ [-0.0125  0.0125  0.0125 -0.0125]
+ [-0.0625  0.0625 -0.0625  0.0625]]
+J_FK closed form      =
+[[ 0.0125  0.0125  0.0125  0.0125]
+ [-0.0125  0.0125  0.0125 -0.0125]
+ [-0.0625  0.0625 -0.0625  0.0625]]
+max |pinv - closed form|        = 1.3877787807814457e-17
+J_FK @ J_IK (should be I3) =
+[[ 1.  0.  0.]
+ [ 0.  1. -0.]
+ [ 0.  0.  1.]]
+J_IK @ J_FK (rank-3 projector, != I4) =
+[[ 0.75 -0.25  0.25  0.25]
+ [-0.25  0.75  0.25  0.25]
+ [ 0.25  0.25  0.75 -0.25]
+ [ 0.25  0.25 -0.25  0.75]]
+null-space direction n = (FL,FR,RL,RR) = (1,1,-1,-1)/2   -> J_FK @ n = [0. 0. 0.]  (no body motion)
+singular values of J_IK: [40. 40.  8.]
+round trip v -> wheels -> v, worst error over 1000 random twists: 2.609024107869118e-15
+
+pure motions  [vx vy wz] -> [w_fl w_fr w_rl w_rr] (rad/s)
+  forward 0.3 m/s      [6. 6. 6. 6.]
+  strafe left 0.3 m/s  [-6.  6.  6. -6.]
+  yaw CCW 1 rad/s      [-4.  4. -4.  4.]
