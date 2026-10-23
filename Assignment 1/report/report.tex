@@ -24,8 +24,8 @@
 
 % ======================= EDIT HERE: demonstration video link(s) =======================
 % Replace the text in braces with e.g. \url{https://youtu.be/XXXXXXXXXXX}  (unlisted link)
-\newcommand{\videolinkone}{\textcolor{acc}{\textbf{[ADD VIDEO LINK HERE]}}}
-\newcommand{\videolinktwo}{\textcolor{acc}{\textbf{[ADD VIDEO LINK HERE]}}}
+\newcommand{\videolinkone}{\url{https://youtube.com/shorts/_sVQTNfv-6Q}}
+\newcommand{\videolinktwo}{\url{https://youtube.com/shorts/8OImLpgchEI}}
 % =======================================================================================
 
 % Visible marker for anything that still has to come from the robot or from you.
@@ -570,7 +570,7 @@ Derivation of $\mathbf J_{IK}$, $\mathbf J_{FK}$ & done, verified & Problem 4(ii
 TF tree and explanation & done & Problem 4(iii)\\
 \texttt{ep\_teleop\_sdk.py}, \texttt{rm\_setup.sh}, raw CSV logs & done & repository, Appendices A and B\\
 ROS 2 run with lateral strafing and measured end position & strafing run done over USB; \todo{tape-measured end position missing} & Problem 3(ii), 3(iv)\\
-Video (a) SDK teleoperation, (b) ROS 2 teleoperation over AP & to be added & \videolinkone{} and \videolinktwo{} (edit the boxes at the top of the source)\\
+Video (a) SDK teleoperation, (b) ROS 2 teleoperation over AP & done & Section~\ref{sec:videos}\\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -582,6 +582,13 @@ Video (a) SDK teleoperation, (b) ROS 2 teleoperation over AP & to be added & \vi
   \item \textbf{Wheel order.} The assumption that the SDK's ESC order is FR, FL, RL, RR was verified from the data (Table~\ref{tab:pattern}).
   \item \textbf{Nominal dimensions.} The wheel radius and chassis half-dimensions used in the numerical examples are the nominal EP values, not measured on this robot.
   \item \textbf{Open items.} A ROS~2 run with lateral strafing, the tape-measured end position for the odometry error, and the two demonstration videos.
+\end{itemize}
+
+\section{Demonstration videos}\label{sec:videos}
+The demonstration videos required by the assignment (each at most 45\,s) are linked below.
+\begin{itemize}
+  \item \textbf{Video (a), SDK teleoperation and telemetry:}\newline \videolinkone{}
+  \item \textbf{Video (b), ROS~2 teleoperation:}\newline \videolinktwo{}
 \end{itemize}
 
 \appendix
