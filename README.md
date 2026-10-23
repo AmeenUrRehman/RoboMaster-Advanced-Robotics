@@ -84,8 +84,3 @@ ros2 launch rm_flatness_nav flatness_nav.launch.py tag_id:=3 tag_size:=0.15 csv_
 - The log shows the stop came from the end of the planned trajectory (`ARRIVED (trajectory end, tag out of view)`, empty ToF column), not from a sensor reading.
 - Motor voltages are model values computed from the commanded velocities, not measurements at the motors.
 - The final run only has a 1 Hz log. Several failed attempts are kept in `Assignment 2/logs/` rather than hidden.
-
-## Demonstration videos
-
-- Assessment 1: <https://youtube.com/shorts/_sVQTNfv-6Q> and <https://youtube.com/shorts/8OImLpgchEI>
-- Assessment 2: <https://youtu.be/EaZKQfd3usE> and <https://youtu.be/JlHnuVnLLrA>
