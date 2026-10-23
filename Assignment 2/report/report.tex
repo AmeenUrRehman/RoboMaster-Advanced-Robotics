@@ -147,12 +147,6 @@ Four real runs of the full system exist. They are listed because the two failure
 \caption{Real frames at four arm poses (the arm read-back is printed above each frame). Within each pair of frames (left two, right two) the arm moved and the image did not change. The two pairs differ slightly from each other (the horizon is higher in the left pair), possibly because the robot was moved between the captures.}\label{fig:armposes}
 \end{figure}
 
-\paragraph{The detector on a real frame.} Figure~\ref{fig:detreal} shows the project detector decoding the real tag from a frame of this camera. At that frame the tag is 61\,px wide and the pose estimate gives a range of 0.81\,m.
-\begin{figure}[H]\centering
-\includegraphics[width=0.72\linewidth]{../figures/fig_detection_real.png}
-\caption{Detection of \texttt{tag36h11} ID 3 on a real frame. The distance assumes a 0.15\,m black square and was not checked with a tape.}\label{fig:detreal}
-\end{figure}
-
 \paragraph{Why the tag was upright, and how far it is visible.} A flat floor tag seen from a camera about 0.25\,m above the floor is strongly foreshortened: for a 15\,cm tag the model of Figure~\ref{fig:vis} (camera height assumed) gives only 11\,px of height at 1\,m and 5\,px at 1.5\,m, which a detector cannot read. An upright tag keeps its full width: $317\cdot0.15/d$ pixels, i.e.\ 47\,px at 1\,m. The detection limit was measured by shrinking a real frame: the tag was found at 41\,px at native size and not at 33\,px; after enlarging the image twice before detection it was found at 33\,px and 27\,px and not at 24\,px. The detector therefore tries native size first and the doubled image if nothing is found (21\,ms per empty frame). Later tests with flat tags (Section on flat tags) showed that they are nevertheless readable out to about 0.6 to 1\,m, which allowed run 5.
 \begin{figure}[H]\centering
 \includegraphics[width=0.78\linewidth]{../figures/fig_visibility.png}
