@@ -26,3 +26,31 @@ Topic information: Topic: /cmd_vel | Type: geometry_msgs/msg/Twist | Count: 81 |
                    Topic: /odom | Type: nav_msgs/msg/Odometry | Count: 2827 | Serialization Format: cdr
 Service:           0
 Service information: 
+
+Files:             bag_usb_0.mcap
+Bag size:          1.7 MiB
+Storage id:        mcap
+ROS Distro:        jazzy
+Duration:          3371.099746996s
+Start:             Oct 23 2026 23:30:39.625529055 (1792787439.625529055)
+End:               Oct 24 2026 00:26:50.725276051 (1792790810.725276051)
+Messages:          1677
+Topic information: Topic: /cmd_vel | Type: geometry_msgs/msg/Twist | Count: 13 | Serialization Format: cdr
+                   Topic: /joint_states | Type: sensor_msgs/msg/JointState | Count: 1427 | Serialization Format: cdr
+                   Topic: /odom | Type: nav_msgs/msg/Odometry | Count: 237 | Serialization Format: cdr
+Service:           0
+Service information: 
+
+Files:             bag_usb_0.mcap
+Bag size:          1.7 MiB
+Storage id:        mcap
+ROS Distro:        jazzy
+Duration:          93.998461811s
+Start:             Oct 24 2026 00:28:15.573134355 (1792790895.573134355)
+End:               Oct 24 2026 00:29:49.571596166 (1792790989.571596166)
+Messages:          1905
+Topic information: Topic: /cmd_vel | Type: geometry_msgs/msg/Twist | Count: 46 | Serialization Format: cdr
+                   Topic: /joint_states | Type: sensor_msgs/msg/JointState | Count: 941 | Serialization Format: cdr
+                   Topic: /odom | Type: nav_msgs/msg/Odometry | Count: 918 | Serialization Format: cdr
+Service:           0
+Service information: 

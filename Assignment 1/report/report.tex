@@ -344,7 +344,11 @@ In a second terminal:
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r /cmd_vel:=/cmd_vel
 \end{Verbatim}
 The node publishes \texttt{geometry\_msgs/Twist} on \texttt{/cmd\_vel}: \texttt{i}/\texttt{,} forward/backward, \texttt{j}/\texttt{l} yaw, \texttt{k} stop, and Shift plus \texttt{j}/\texttt{l} (capitals) lateral strafing; the speed steps up and down with the \texttt{q}/\texttt{z} family of keys (the maximum linear command in the log is 0.55\,m/s, i.e.\ $0.5\times1.1$). The recorded run lasted 289.5\,s with 81 \texttt{/cmd\_vel} messages (maximum $|v_x|=0.55$\,m/s, $|\omega_z|=1.0$\,rad/s), with roughly 21\,s of forward or backward driving and 40\,s of rotation. The path consists of straight legs joined by in-place turns (Figure~\ref{fig:odom}), and the net heading change is $+1447^\circ$ (about four turns).
-\textbf{No lateral strafing was commanded in this run} ($\max|v_y|=0$ in the bag), so the strafing part of this step is not yet demonstrated. \todo{short repeat run with Shift+J / Shift+L strafing legs, over AP}
+\textbf{No lateral strafing was commanded in this Wi-Fi run} ($\max|v_y|=0$ in the bag). A second, shorter run was therefore recorded \emph{over the USB link} (\texttt{conn\_type:=rndis}, bag \texttt{logs/bag\_usb}), with forward motion, Shift+J / Shift+L strafing and turning. It lasted 93.3\,s with 918 odometry samples (9.8\,Hz) and 46 \texttt{/cmd\_vel} messages; the largest commands were $|v_x|=0.5$\,m/s, $|v_y|=0.5$\,m/s and $|\omega_z|=1.0$\,rad/s. Odometry gives a path length of 6.39\,m, a net heading change of $-53.5^\circ$ and an end position of $(X,Y)=(-0.379,\,-0.117)$\,m in the start frame (Figure~\ref{fig:odomusb}). The tape-measured end position was not recorded for this run either, so the odometry error is still not quantified.
+\begin{figure}[H]\centering
+\includegraphics[width=0.62\linewidth]{../figures/usb/fig_odom.png}
+\caption{Odometry trajectory of the USB run with strafing (start frame, $x$ forward, $y$ left). No measured end position is available.}\label{fig:odomusb}
+\end{figure}
 
 \subsection{(iii) Telemetry acquisition}
 \begin{Verbatim}[fontsize=\small]
@@ -565,7 +569,7 @@ Table of topology comparison & done & Problem 4(i)\\
 Derivation of $\mathbf J_{IK}$, $\mathbf J_{FK}$ & done, verified & Problem 4(ii)\\
 TF tree and explanation & done & Problem 4(iii)\\
 \texttt{ep\_teleop\_sdk.py}, \texttt{rm\_setup.sh}, raw CSV logs & done & repository, Appendices A and B\\
-ROS 2 run with lateral strafing and measured end position & \todo{open} & Problem 3(ii), 3(iv)\\
+ROS 2 run with lateral strafing and measured end position & strafing run done over USB; \todo{tape-measured end position missing} & Problem 3(ii), 3(iv)\\
 Video (a) SDK teleoperation, (b) ROS 2 teleoperation over AP & to be added & \videolinkone{} and \videolinktwo{} (edit the boxes at the top of the source)\\
 \bottomrule
 \end{tabular}

@@ -314,15 +314,24 @@ The node prints one table line per second and writes the same values to \texttt{
 \caption{Output of \texttt{python -m rm\_flatness\_nav.sim} (simulation, not hardware data).}
 \end{figure}
 
+\section{Trials with the three printed tags lying flat}
+After the runs above, all three printed tags (\texttt{tag36h11}, IDs 1, 2, 3, black square 150\,mm) were laid flat on the carpet, as the assignment describes, with Tag~3 in the middle and Tags~1 and~2 about 0.3\,m to its left and right as distractors. The node follows only ID~3.
+\paragraph{Static detection test (real camera frames).} With the row 0.6\,m in front of the robot, the project's own detector (native scale) found all three tags: Tag~1 83$\times$27\,px, Tag~3 69$\times$27\,px, Tag~2 84$\times$28\,px (Figure~\ref{fig:flat}). With the row moved to about 0.8\,m only Tag~2 was found, at 47$\times$9\,px, and Tag~3 was missed; at about 1\,m nothing was found. So in a single frame a flat tag is readable out to roughly 0.6 to 0.7\,m with this camera. The node's search is more tolerant (it also tries a 2$\times$ enlarged image and sees the tag over several frames).
+\begin{figure}[H]\centering
+\includegraphics[width=0.8\linewidth]{../figures/camera/flat_tags_0p6m.png}
+\caption{Real frame from the robot: the three printed tags lying flat, 0.6\,m ahead. All three are detected (IDs 1, 3, 2 from left to right).}\label{fig:flat}
+\end{figure}
+\paragraph{Mission attempts.} Three autonomous attempts were made with this layout (about 1\,m to Tag~3). \textbf{None reached ARRIVED, so none is used in Table~1 or the plots.} In the first the tag was not detected during a 33\,s sweep. In the other two it was detected, the robot aligned and began to chase (for about 8\,s in the last one), then lost the tag and returned to SEARCHING. In both the logged distances were about 100 times too large (for example 95.8 where the tag was about 1\,m away), which is what a tag size typed as 15 instead of 0.15 would produce; because of this scale error the rule that continues the trajectory when the tag leaves the image (it only applies within 1.8\,m) could not act. This cause is inferred from the numbers; the node's start-up line with the tag size was not kept. The tag-size prompt of the helper script now rejects implausible values. The logs are kept in \texttt{logs/flat\_failed\_attempts/}. A clean flat-tag run with the correct tag size was not completed, so the evidence for the full mission remains runs~3 and~4 (upright tag).
+
 \section{Deviations from the assignment text and limitations}
 \begin{itemize}
-  \item \textbf{Upright tag.} The assignment places the tag \emph{flat} on the floor; the tag stood upright, facing the robot, because a flat 15\,cm tag is a thin sliver for this camera (Figure~\ref{fig:vis}).
+  \item \textbf{Upright tag.} The assignment places the tag \emph{flat} on the floor; the tag stood upright, facing the robot, because a flat 15\,cm tag is a thin sliver for this camera (Figure~\ref{fig:vis}). A later trial with flat tags (Section on flat tags) confirmed that a flat tag is readable only out to about 0.6 to 0.7\,m in a single frame, and no flat-tag mission completed.
   \item \textbf{Distance.} The assignment gives 1.5 to 1.8\,m. The tag was about 1.3 to 1.4\,m away (the robot only rotates before the chase, so the camera range at the first detection is the starting distance: 1.375\,m in run 3 and 1.28\,m in run 4). The detector could see further with its upscaled search, but the tag was not placed there.
   \item \textbf{Camera and arm.} The arm pose did not change the camera view; the camera tilt of about $20^\circ$ was read from images.
   \item \textbf{Stop source.} The stop came from the planned trajectory, not from a camera or ToF reading. The sensor brakes are implemented and unit-tested but were not triggered on the robot.
   \item \textbf{Voltages} are model values computed from commanded velocities (Eq.~(5)); they are not measured at the motors.
   \item \textbf{Number of trials.} Two successful runs; the stop gap was measured by hand to about 1\,cm.
-  \item \textbf{Tags~1 and~2.} Only Tag~3 was used in the experiments.
+  \item \textbf{Tags~1 and~2.} The successful runs (3 and~4) used Tag~3 alone. Tags~1 and~2 were placed beside it only in the flat-tag trials, where they were detected but ignored by ID; no successful mission with all three tags was logged.
 \end{itemize}
 
 \section{Deliverables checklist}
