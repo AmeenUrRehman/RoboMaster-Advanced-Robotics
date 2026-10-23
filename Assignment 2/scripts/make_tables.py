@@ -17,7 +17,7 @@ open('report/tab_coeff.tex', 'w').write('\n'.join(out) + '\n')
 
 # ---- per-run statistics of the real runs
 runs = [('1', '16:00', 'Wi-Fi AP', 'logs/archive_20261023_155809'), ('2', '16:04', 'Wi-Fi AP', 'logs/archive_20261023_183424'),
-        ('3', '18:36', 'USB', 'logs/archive_20261023_191249'), ('4', '19:14', 'USB', 'logs/upright_run4'), ('5', '00:44', 'USB', 'logs/flat_run5')]
+        ('3', '00:44', 'USB', 'logs/flat_run5')]
 out = [r'\begin{tabular}{@{}lllrrrrrl@{}}', r'\toprule',
        r'Run & logged & final state & search (s) & first seen (m) & chase $d_0$ (m) & chase (s) & peak $v$ (m/s) & last seen (m)\\', r'\midrule']
 for n, when, link, d in runs:

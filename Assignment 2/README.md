@@ -35,11 +35,16 @@ ros2 launch rm_flatness_nav flatness_nav.launch.py tag_id:=3 tag_size:=0.15 csv_
 ```
 `tag_size` is the measured side of the black square in metres. The run ends by itself after the robot halts.
 
-## Measured results (Tag 3, `tag36h11`, 15 cm, wired USB)
-- **Run 5 (final, flat tags):** the three printed tags lay flat (Tags 1 and 2 beside Tag 3). Start about 1.2 to 1.5 m (hand-measured range; camera first read 1.07 m to the tag centre), search 8.0 s, align 2.0 s, chase about 8.9 s, peak speed 0.136 m/s (1 Hz samples), final voltages V1 to V4 = 0.000 V, stop gap about 20 cm measured to the edge of the A4 sheet (about 30 cm to the black square, about 38 cm to the tag centre, so the robot stopped about 18 cm short of the planned 20 cm to the centre). Only the 1 Hz log exists (`logs/flat_run5/`); Table 1 and the main plot come from it.
-- **Run 4 (upright tag, 20 Hz log):** search 11.4 s, align 2.5 s, chase 10.9 s from d0 = 1.28 m, peak 0.137 m/s, stop gap 20 cm (`logs/upright_run4/`). Run 3 is similar (`logs/archive_20261023_191249/`).
-- Runs 1 and 2 never halted (before the fix). Three further flat-tag attempts failed: one never saw the tag, two had distances about 100x too large, which is what a tag size typed as 15 instead of 0.15 gives (`logs/flat_failed_attempts/`).
-- The stop comes from the planned trajectory: the tag leaves the camera image (below about 0.35 m upright, about 0.47 m flat) and the ToF returned no reading in range.
+## Measured result (Tag 3, `tag36h11`, 15 cm, lying flat, wired USB)
+- The three printed tags lay flat on the floor (Tags 1 and 2 beside Tag 3 as distractors). The robot started about 1.2 to 1.5 m away (hand-measured range; the camera first read 1.07 m to the tag centre).
+- Search 8.0 s, align 2.0 s, chase about 8.9 s, peak speed 0.136 m/s (1 Hz samples), final voltages V1 to V4 = 0.000 V.
+- The robot halted by itself about 20 cm from the tag (hand-measured), equal to the target. Only the 1 Hz log exists (`logs/flat_run5/`); Table 1 and the plot come from it.
+- The log's state at the halt is `ARRIVED (trajectory end, tag out of view)` and its ToF column is empty, so the stop came from the end of the planned trajectory.
+- Two earlier runs never halted (before the blind-chase fix), and three further flat-tag attempts failed: one never saw the tag, two had distances about 100x too large, which is what a tag size typed as 15 instead of 0.15 gives (`logs/flat_failed_attempts/`). `logs/` also holds the raw logs of earlier development trials.
+
+## Deviations from the assignment text
+- Start distance 1.2 to 1.5 m instead of 1.5 to 1.8 m. The final run has no 20 Hz log.
+- The camera is fixed to the chassis (about 20 degrees downward); the arm pose (105 mm, 30 mm) does not change its tilt.
 
 ## Camera and photos
 - `figures/fig_tag3_camera.png`: real robot-camera frame of the three flat tags, with the detector's result and an enlarged Tag 3 (`scripts/make_camera_figs.py`).

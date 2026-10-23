@@ -48,8 +48,8 @@
 A RoboMaster EP searches for a floor target (Tag~3), aligns with it, follows a smooth trajectory generated with differential flatness, stops 20\,cm in front of it, and logs the four wheel-motor voltages once per second.
 The solution is a ROS~2 package (\texttt{rm\_flatness\_nav}) built from small, tested pieces: a closed-form flatness inversion and a cubic boundary-value solver, a four-state supervisory state machine, an AprilTag detector with pose recovery, a wheel-rate and armature-voltage model, and a ROS~2 node that connects them to the robot.
 All hardware results come from real logs on the robot; every terminal figure is rendered from the captured text of the real command, and every plot comes from the real CSV files.
-Three complete autonomous runs over USB ended with the state \texttt{ARRIVED}, each with all four voltages exactly $0.000$\,V at the halt and a peak speed of about $0.137$\,m/s (limit $0.16$\,m/s). Run~5, the one used for Table~1 and the plot, used the three printed tags lying flat on the floor as the assignment describes; runs~3 and~4 used the tag standing upright. The stop gap, measured by hand, was 20\,cm in runs 3 and 4 (to the upright tag); in run 5 it was about 20\,cm to the edge of the A4 sheet, which is about 30\,cm to the black square and about 38\,cm to the tag centre (see Section~4), i.e.\ the robot stopped about 18\,cm short of the planned 20\,cm to the tag centre.
-The report also documents what did \emph{not} work (two earlier runs that never halted and several flat-tag attempts with a wrong tag scale), what was learned from the camera (it is fixed to the chassis and does not tilt with the arm), and where the setup deviates from the assignment text (an upright tag in runs 3 and 4, a start distance of 1.2 to 1.5\,m instead of 1.5 to 1.8\,m, and a stop that comes from the planned trajectory rather than from a camera reading).
+One complete autonomous run over USB ended with the state \texttt{ARRIVED} (run~3, used for Table~1 and the plot). It used the three printed tags lying flat on the floor as the assignment describes. The stop worked on the physical robot: the robot halted by itself with all four voltages exactly $0.000$\,V, a peak speed of about $0.137$\,m/s (limit $0.16$\,m/s) and a stop gap of about 20\,cm from the tag, measured by hand, equal to the target.
+The report also documents what did \emph{not} work (two earlier runs that never halted and several flat-tag attempts with a wrong tag scale), what was learned from the camera (it is fixed to the chassis and does not tilt with the arm), and where the setup deviates from the assignment text (a start distance of 1.2 to 1.5\,m instead of 1.5 to 1.8\,m, and a stop that comes from the planned trajectory rather than from a sensor reading).
 \end{abstract}
 
 \subsection*{Summary of results}
@@ -58,12 +58,12 @@ The report also documents what did \emph{not} work (two earlier runs that never 
 \toprule
 \textbf{Quantity} & \textbf{Result}\\
 \midrule
-Target & Tag~3, \texttt{tag36h11} ID 3, black square 0.15\,m; run 5 lying flat (Tags 1, 2 beside it), runs 3--4 upright\\
-Trajectory horizon (Eq.~3) & run 5: $T=1.6\,(1.05-0.20)/0.16=8.5$\,s planned, about 8.9\,s measured (1\,Hz log); run 4: 10.8\,s planned, 10.9\,s measured\\
-Peak forward speed (runs 3 to 5) & 0.137\,m/s (0.136 in run 5, 1\,Hz samples); limit 0.16\,m/s\\
+Target & Tag~3, \texttt{tag36h11} ID 3, black square 0.15\,m, lying flat (Tags 1, 2 beside it)\\
+Trajectory horizon (Eq.~3) & $T=1.6\,(1.05-0.20)/0.16=8.5$\,s planned, about 8.9\,s measured (1\,Hz log)\\
+Peak forward speed & 0.136\,m/s in the 1\,Hz samples (planner peak 0.137\,m/s); limit 0.16\,m/s\\
 Final motor voltages & $V_1=V_2=V_3=V_4=0.000$\,V at the halt\\
-Measured stop gap (tape measure) & 20\,cm in runs 3 and 4; run 5: about 20\,cm to the sheet edge (about 30\,cm to the black square)\\
-Search / align / chase duration & run 5: 8.0\,s / 2.0\,s / 8.9\,s (total 18.9\,s); run 4: 11.4\,s / 2.5\,s / 10.9\,s (25.2\,s)\\
+Measured stop gap (tape measure) & about 20\,cm from the tag (target 20\,cm)\\
+Search / align / chase duration & 8.0\,s / 2.0\,s / 8.9\,s (total 18.9\,s)\\
 Unit tests & 18 of 18 pass\\
 Camera tilt (measured from images) & about $20^\circ$ downward, fixed to the chassis\\
 \bottomrule
@@ -122,15 +122,15 @@ The assignment names three targets, $T_1$, $T_2$ and $T_3$, without specifying a
 The control loop runs at 20\,Hz. The code is in the repository (see the link at the top) and the main files are listed in Appendix~A.
 
 \subsection{Data provenance and run history}\label{sec:hist}
-Four real runs of the full system exist. They are listed because the two failures led directly to design changes. The columns are computed from the logs by \texttt{scripts/make\_tables.py}.
+Three real runs of the full system exist. They are listed because the two failures led directly to design changes. The columns are computed from the logs by \texttt{scripts/make\_tables.py}.
 \begin{table}[H]\centering\scriptsize
 \resizebox{\linewidth}{!}{\input{tab_runs.tex}}
-\caption*{\textbf{Run history.} The four real runs. ``First seen'' and ``last seen'' are the camera distances at the first and last detection that appear in the 1\,Hz log.}
+\caption*{\textbf{Run history.} The three real runs (run 3 is the final, flat-tag run). ``First seen'' and ``last seen'' are the camera distances at the first and last detection that appear in the 1\,Hz log.}
 \end{table}
 \begin{itemize}
   \item \textbf{Runs 1 and 2 (before the fix).} The robot detected the tag, aligned and started the chase, but when the tag left the image it returned to SEARCHING and never halted. In those runs the helper output of the session shows a configured tag size of 0.20\,m while the tag is 0.15\,m, so the distances reported there are about $0.20/0.15=1.33$ times too large.
   \item \textbf{The fix.} If the tag disappears \emph{during} a chase and was last seen within 1.8\,m, the planned trajectory simply continues from its time base (it already ends at the standoff).
-  \item \textbf{Runs 3, 4 and 5 (after the fix, over USB, tag size 0.15\,m).} All three ended in \texttt{ARRIVED}. Runs 3 and 4 used the tag standing upright (20\,Hz logs); run 5 used the printed tags lying flat (only the 1\,Hz log was kept) and is the one shown in Table~1 and the main plot.
+  \item \textbf{Run 3 (after the fix, over USB, tag size 0.15\,m).} The printed tags lay flat; the run ended in \texttt{ARRIVED}. Only the 1\,Hz log was kept. It is the run shown in Table~1 and the main plot.
 \end{itemize}
 
 \section{Problem 1: Visual search, in-place centering and standoff guard}
@@ -145,11 +145,7 @@ Four real runs of the full system exist. They are listed because the two failure
 \caption{Real frames at four arm poses (the arm read-back is printed above each frame). Within each pair of frames (left two, right two) the arm moved and the image did not change. The two pairs differ slightly from each other (the horizon is higher in the left pair), possibly because the robot was moved between the captures.}\label{fig:armposes}
 \end{figure}
 
-\paragraph{Why the tag was upright, and how far it is visible.} A flat floor tag seen from a camera about 0.25\,m above the floor is strongly foreshortened: for a 15\,cm tag the model of Figure~\ref{fig:vis} (camera height assumed) gives only 11\,px of height at 1\,m and 5\,px at 1.5\,m, which a detector cannot read. An upright tag keeps its full width: $317\cdot0.15/d$ pixels, i.e.\ 47\,px at 1\,m. The detection limit was measured by shrinking a real frame: the tag was found at 41\,px at native size and not at 33\,px; after enlarging the image twice before detection it was found at 33\,px and 27\,px and not at 24\,px. The detector therefore tries native size first and the doubled image if nothing is found (21\,ms per empty frame). Later tests with flat tags (Section on flat tags) showed that they are nevertheless readable out to about 0.6 to 1\,m, which allowed run 5.
-\begin{figure}[H]\centering
-\includegraphics[width=0.78\linewidth]{../figures/fig_visibility.png}
-\caption{Apparent size of a 15\,cm tag against distance for an upright and a flat tag, with the measured detection limits. The flat-tag curve uses an assumed camera height of 0.25\,m.}\label{fig:vis}
-\end{figure}
+\paragraph{How far a flat tag is visible.} A flat floor tag seen from a camera close to the floor is strongly foreshortened: in the real frame of Figure~\ref{fig:flat} a 15\,cm tag is 69$\times$27\,px at 0.6\,m. The detection limit was measured by shrinking a real frame: the tag was found at 41\,px at native size and not at 33\,px; after enlarging the image twice before detection it was found at 33\,px and 27\,px and not at 24\,px. The detector therefore tries native size first and the doubled image if nothing is found (21\,ms per empty frame). In the final run the tag was first detected at a camera distance of 1.07\,m.
 
 \subsection{(ii) Search and centering finite state machine}
 \begin{figure}[H]\centering
@@ -193,7 +189,7 @@ Four real runs of the full system exist. They are listed because the two failure
 \paragraph{Why align in place before translating.} The planned path is a straight cubic in the robot frame (the boundary conditions require $y(0)=y(T)=0$), so it assumes the tag lies straight ahead. If the robot drove while its heading was off by $\theta$, the open-loop path would end laterally displaced by about $d\sin\theta$: for the real run ($d=1.28$\,m) a $10^\circ$ error already gives $1.28\sin10^\circ=22$\,cm, which is larger than the tag itself. The tag would also drift toward the edge of the image (the half field of view is about $45^\circ$), where it is partly clipped or lost. Rotating first removes the heading error at zero translation, so the planned and executed paths coincide and the tag stays near the image centre. Both real runs show this: after the first two seconds of the chase the logged bearing error stayed within 0.02\,rad.
 
 \subsection{(iii) Standoff braking}
-The brake is the first test in every control tick, before any other state logic: if the camera ground distance is $d\le0.20$\,m or the front ToF reads $\le0.20$\,m, the state becomes ARRIVED and $(v,\omega)=(0,0)$ is commanded immediately and the state is latched. This behaviour is covered by unit tests (\texttt{test\_fsm\_brake\_on\_camera\_and\_tof}). \textbf{On the robot neither sensor brake was triggered}: in both runs the upright tag left the top of the image at about 0.35 to 0.38\,m, and the ToF never returned a reading below its maximum range, so the stop came from the end of the planned trajectory (state \texttt{ARRIVED (trajectory end, tag out of view)}), which is designed to end exactly at the standoff. The measured gap of 20\,cm confirms that this worked in these two runs.
+The brake is the first test in every control tick, before any other state logic: if the camera ground distance is $d\le0.20$\,m or the front ToF reads $\le0.20$\,m, the state becomes ARRIVED and $(v,\omega)=(0,0)$ is commanded immediately and the state is latched. This behaviour is covered by unit tests (\texttt{test\_fsm\_brake\_on\_camera\_and\_tof}). \textbf{In the final run the state at the halt was \texttt{ARRIVED (trajectory end, tag out of view)} and the ToF column of the log is empty}, so the stop came from the end of the planned trajectory, which is designed to end at the standoff; the camera and ToF brakes were not the source of the stop. The robot halted by itself about 20\,cm from the tag, equal to the target, so the stop worked on the physical robot.
 
 \paragraph{Video stalls.} The runs used the driver's own decoder and the published topic \texttt{camera/image\_color}. The driver log contains no decoder or buffer errors (its only warning is that the optional FFmpeg transport package is not installed). The optional direct-capture mode of the node (\texttt{camera\_source:=cv2}) implements the recommended grab thread with a \texttt{time.sleep(0.010)} between \texttt{cap.grab()} calls; it was not needed and was not used.
 
@@ -226,7 +222,7 @@ which \texttt{solve\_flat\_polynomial(z0, zdot0, zf, zdotf, T)} solves with \tex
 \begin{equation}
 T=\max\!\left(4.0,\ \frac{1.6\,(d_0-0.20)}{v_{\max}}\right),\qquad v_{\max}=0.16\ \text{m/s}.\tag{3}
 \end{equation}
-The mean speed of the path is $z_f/T=(d_0-0.20)/T=v_{\max}/1.6=0.10$\,m/s, and a cubic that starts slowly and ends at rest peaks at roughly 1.4 times its mean. Because $T$ scales with the distance, the peak is the same for every $d_0$ (the 4\,s floor only matters for starts closer than $0.2+4\cdot0.16/1.6=0.6$\,m). The coefficient table below was computed with the package; the peak is 0.137\,m/s in all cases, below 0.16\,m/s, and $v(T)=0$. In the real runs, $d_0=1.37$\,m (run 3) and 1.28\,m (run 4) give $T=11.7$\,s and 10.8\,s, and the chases lasted 11.8\,s and 10.9\,s (the extra 0.1 to 0.2\,s is the control-tick granularity).
+The mean speed of the path is $z_f/T=(d_0-0.20)/T=v_{\max}/1.6=0.10$\,m/s, and a cubic that starts slowly and ends at rest peaks at roughly 1.4 times its mean. Because $T$ scales with the distance, the peak is the same for every $d_0$ (the 4\,s floor only matters for starts closer than $0.2+4\cdot0.16/1.6=0.6$\,m). The coefficient table below was computed with the package; the peak is 0.137\,m/s in all cases, below 0.16\,m/s, and $v(T)=0$. In the real run, $d_0=1.05$\,m gives $T=8.5$\,s and the chase lasted about 8.9\,s (the log has 1\,s resolution).
 
 \begin{table}[H]\centering\small
 \input{tab_coeff.tex}
@@ -250,56 +246,31 @@ With $r=0.05$\,m and $L_c=0.20$\,m, Eq.~(4) of the assignment is implemented as
 \begin{equation}
 V_i(t)=K_v\,\omega_i(t)+K_a\,\frac{\omega_i(t)-\omega_i(t-\Delta t)}{\Delta t},\qquad K_v=0.38\ \mathrm{V\,s/rad},\ \ K_a=0.06\ \mathrm{V\,s^2/rad}.\tag{5}
 \end{equation}
-It is evaluated in every control tick ($\Delta t=0.05$\,s) on the wheel rates computed from the \emph{commanded} $(v_x,\omega_z)$. The voltages are therefore model outputs: the motor controller's own voltage is not measured. The first tick uses a zero acceleration term, and once the robot has halted the wheel rates are zero for two consecutive ticks, so $V_i=0$ exactly (no acceleration term left). Figure~\ref{fig:vterms} splits the logged $V_1$ of run 4 into its two terms: the back-EMF term $K_v\omega_1$ carries the whole cruise (up to $1.05$\,V), and the inertia term $K_a\Delta\omega_1/\Delta t$ is nonzero only at the velocity steps (starting to turn in SEARCHING, the switch from ALIGNING to CHASING, where the speed jumps to the initial 0.06\,m/s, and the final deceleration), reaching about $+1.4$\,V at the start of the chase and $-1.3$\,V at an in-place reversal.
-
-\begin{figure}[H]\centering
-\includegraphics[width=0.92\linewidth]{../figures/fig_voltage_terms.png}
-\caption{Back-EMF and inertia terms of $V_1$ in run 4 (20\,Hz log).}\label{fig:vterms}
-\end{figure}
+It is evaluated in every control tick ($\Delta t=0.05$\,s) on the wheel rates computed from the \emph{commanded} $(v_x,\omega_z)$. The voltages are therefore model outputs: the motor controller's own voltage is not measured. The first tick uses a zero acceleration term, and once the robot has halted the wheel rates are zero for two consecutive ticks, so $V_i=0$ exactly (no acceleration term left). In the final run the back-EMF term $K_v\omega_1$ carries the cruise (up to $1.04$\,V at the 1\,Hz samples), and the inertia term $K_a\Delta\omega_1/\Delta t$ is nonzero only at the velocity steps (starting to turn in SEARCHING, the switch from ALIGNING to CHASING, where the speed jumps to the initial 0.06\,m/s, and the final deceleration).
 
 \subsection{(iii) Live table and CSV logging}
-The node prints one table line per second and writes the same values to \texttt{motor\_voltage\_log.csv} (columns: \texttt{t\_s}, \texttt{V1\_V}..\texttt{V4\_V}, \texttt{state}, \texttt{v\_mps}, \texttt{w\_radps}, \texttt{distance\_m}, \texttt{bearing\_rad}, \texttt{tof\_m}, \texttt{w1}..\texttt{w4\_radps}); a 20\,Hz copy (\texttt{motor\_voltage\_fast.csv}) is used for the plots. When the state becomes ARRIVED the node waits three control ticks and then writes the last row at the true stop time, so that the voltages in that row are exactly zero.
+The node prints one table line per second and writes the same values to \texttt{motor\_voltage\_log.csv} (columns: \texttt{t\_s}, \texttt{V1\_V}..\texttt{V4\_V}, \texttt{state}, \texttt{v\_mps}, \texttt{w\_radps}, \texttt{distance\_m}, \texttt{bearing\_rad}, \texttt{tof\_m}, \texttt{w1}..\texttt{w4\_radps}); the node can also write a 20\,Hz copy (\texttt{motor\_voltage\_fast.csv}); it was not recorded for the final run, so its plot uses the 1\,Hz table. When the state becomes ARRIVED the node waits three control ticks and then writes the last row at the true stop time, so that the voltages in that row are exactly zero.
 
 \begin{figure}[H]\centering
 \includegraphics[width=\linewidth,height=0.62\textheight,keepaspectratio]{../figures/term/node_table.png}
-\caption{Console output of the node for run 5, rendered from \texttt{motor\_voltage\_log.csv} in the node's log format (the console text itself was not saved during the run; the CSV is the real data).}
+\caption{Console output of the node for run 3, rendered from \texttt{motor\_voltage\_log.csv} in the node's log format (the console text itself was not saved during the run; the CSV is the real data).}
 \end{figure}
 
-\paragraph{Voltage log of run 5 (flat tags).} The table below is Table~1 of the assignment, filled with the real values of run 5 (one row per second).
+\paragraph{Voltage log of run 3 (flat tags).} The table below is Table~1 of the assignment, filled with the real values of run 3 (one row per second).
 \IfFileExists{table1.tex}{\input{table1.tex}}{\todo{Table 1 (generate with scripts/make\_table.py)}}
 
-\paragraph{Run 5 description} (tag \texttt{tag36h11}, ID 3, black square 0.15\,m, printed on A4 and lying flat on the carpet with Tags 1 and 2 beside it as distractors; 360\,p video; wired USB link; \texttt{logs/flat\_run5/motor\_voltage\_log.csv}).
+\paragraph{Run 3 description} (tag \texttt{tag36h11}, ID 3, black square 0.15\,m, printed on A4 and lying flat on the carpet with Tags 1 and 2 beside it as distractors; 360\,p video; wired USB link; \texttt{logs/flat\_run5/motor\_voltage\_log.csv}).
 \begin{itemize}
   \item \textbf{SEARCHING} from 0 to 8\,s: the robot swept in place at 0.30\,rad/s, so $V_1=V_4=+0.456$\,V and $V_2=V_3=-0.456$\,V.
-  \item \textbf{ALIGNING} from 8 to 10\,s: Tag~3 was first seen at a camera distance of 1.067\,m and a bearing of 0.71\,rad; the robot rotated in place until the bearing was below 0.18\,rad (about 0.02 to 0.07\,rad at the 10\,s row).
-  \item \textbf{CHASING} from 10\,s: the cubic was planned from $d_0=1.053$\,m, so $T=1.6(1.053-0.20)/0.16=8.5$\,s. The log reaches \texttt{ARRIVED} at 18.9\,s, which is about 8.9\,s after the first chasing row (1\,s resolution). The peak speed is 0.136\,m/s in the 1\,Hz samples (the planner's own peak is 0.137\,m/s). The camera distance fell from 1.053 to 0.465\,m (at $t=15$\,s); after that the flat tag was no longer detected.
+  \item \textbf{ALIGNING} from 8 to 10\,s: Tag~3 was first seen at a camera distance of 1.067\,m and a bearing of 0.71\,rad; the robot rotated in place until the bearing was below 0.18\,rad.
+  \item \textbf{CHASING} from 10\,s: the cubic was planned from $d_0=1.053$\,m, so $T=1.6(1.053-0.20)/0.16=8.5$\,s. The log reaches \texttt{ARRIVED} at 18.9\,s, about 8.9\,s after the first chasing row (1\,s resolution). The peak speed is 0.136\,m/s in the 1\,Hz samples (the planner's own peak is 0.137\,m/s). The camera distance fell from 1.053 to 0.465\,m (at $t=15$\,s); after that the flat tag was no longer detected.
   \item \textbf{ARRIVED} at 18.9\,s: the trajectory ended with the tag out of view, logged as \texttt{ARRIVED (trajectory end, tag out of view)}, with $V_1=V_2=V_3=V_4=0.000$\,V.
 \end{itemize}
-\textbf{Measured distances (tape measure).} The tags started about 1.2 to 1.5\,m in front of the robot (a hand-measured range, not a single number) and the final gap between the front of the robot and the \emph{edge of the A4 sheet} was \textbf{about 20\,cm}; the sheet was not touched. On the printed sheet the black square starts 105\,mm above the sheet's lower edge and is 150\,mm wide, so the same stop is about $20+10.5=30.5$\,cm from the near edge of the black square and about $30.5+7.5=38$\,cm from the tag centre (assuming the sheet lay square to the robot and was printed at 100\,\%). The planner stops when the camera-to-centre distance is 0.20\,m, so in run 5 the robot stopped about 18\,cm \emph{short} of the planned stop, never closer than planned. For comparison, the camera reported 1.067\,m (to the tag centre) at the first detection. A planned travel of $1.053-0.20=0.85$\,m from a true centre distance of about 1.23\,m would leave about 0.38\,m, which is what was measured; this suggests that the camera range of a flat tag read low by roughly 0.15 to 0.2\,m (the camera tilt of $20^\circ\pm3^\circ$ and its height are estimates), but with a hand-measured start range this explanation is not verified. The stop itself is dead-reckoned from the planned trajectory (the flat tag was no longer visible during the last part of the approach).
+\textbf{Measured distances (tape measure).} The tags started about 1.2 to 1.5\,m in front of the robot (a hand-measured range, not a single number) and the final gap between the front of the robot and the tag was \textbf{about 20\,cm}, equal to the target; the tag was not touched. For comparison, the camera reported 1.067\,m (from the camera to the tag centre) at the first detection, which is slightly below the hand-measured range; because the hand measurement is a range, no conclusion is drawn about a bias of the camera distance. The stop worked on the physical robot: it halted by itself with all four voltages exactly zero. The ToF column of the log is empty, so the stop was made by the end of the planned trajectory and not by a sensor reading.
 
 \begin{figure}[H]\centering
 \includegraphics[width=0.95\linewidth]{../figures/fig_v_V1.png}
-\caption{Forward speed $v(t)$ and motor voltage $V_1(t)$ during run 5 (flat tags, 1\,Hz log; the time axis starts at 5\,s, the search before it has $v=0$ and $V_1=0.456$\,V).}
-\end{figure}
-
-\paragraph{Run 4 for comparison (upright tag, 20\,Hz log).} (tag \texttt{tag36h11}, ID 3, black square 0.15\,m, standing upright facing the robot; 360\,p video; wired USB link; \texttt{motor\_voltage\_log.csv}).
-\begin{itemize}
-  \item \textbf{SEARCHING} from 0 to 11.4\,s: the robot started facing away from the tag and swept in place at 0.30\,rad/s, so $V_1=V_4=+0.456$\,V and $V_2=V_3=-0.456$\,V.
-  \item \textbf{ALIGNING} from 11.4 to 13.9\,s: the tag came into view and the robot rotated in place (alternating voltage signs while it corrected) until $|\theta|\le0.18$\,rad, then settled for 0.3\,s.
-  \item \textbf{CHASING} from 13.9 to 24.8\,s: the cubic trajectory was planned from $d_0\approx1.28$\,m (bearing 0.15\,rad), giving $T=1.6(1.28-0.20)/0.16=10.8$\,s, and the chase took 10.9\,s. The peak speed was 0.137\,m/s (limit 0.16). The measured camera distance fell from 1.280\,m to 0.351\,m (at $t=22$\,s) with a bearing error of about 0.01\,rad.
-  \item \textbf{ARRIVED} at 24.8\,s: below about 0.35\,m the upright tag left the top of the image (its centre is above the optical axis), so the last part of the approach ran from the planned trajectory alone, which ends at the 20\,cm standoff. The state was logged as \texttt{ARRIVED (trajectory end, tag out of view)}. The row at $T_{\rm stop}=25.2$\,s shows $V_1=V_2=V_3=V_4=0.000$\,V, as required.
-\end{itemize}
-\textbf{Measured stop distance:} for run 4, a tape measure gave a gap of \textbf{20\,cm} between the front of the robot and the tag after it halted, equal to the target. An earlier trial with the same tag and code (a longer 36\,s search) also gave 20\,cm. Measurements are by hand (resolution about 1\,cm) and the stop is reached by the dead-reckoned trajectory, so it depends on the distance estimate taken at the start of the chase.
-
-\begin{figure}[H]\centering
-\includegraphics[width=0.95\linewidth]{../figures/fig_v_V1_run4_20Hz.png}
-\caption{Run 4 (upright tag): $v(t)$ and $V_1(t)$ from the 20\,Hz log, for comparison with the 1\,Hz log of run 5.}
-\end{figure}
-
-\paragraph{Repeatability.} Aligned at the start of the chase, the two upright-tag runs (3 and 4) are almost the same (Figure~\ref{fig:rep}): the peak speed is $0.137$\,m/s in both, and the chase lasted 11.8\,s and 10.9\,s for start distances of 1.37\,m and 1.28\,m. The run-history table in Section~\ref{sec:hist} lists all four runs.
-\begin{figure}[H]\centering
-\includegraphics[width=0.92\linewidth]{../figures/fig_repeatability.png}
-\caption{Runs 3 and 4 aligned at the start of CHASING (real data, 20\,Hz log).}\label{fig:rep}
+\caption{Forward speed $v(t)$ and motor voltage $V_1(t)$ during run 3 (flat tags, 1\,Hz log; the time axis starts at 5\,s, the search before it has $v=0$ and $V_1=0.456$\,V).}
 \end{figure}
 
 \section{Verification}
@@ -322,17 +293,17 @@ The node prints one table line per second and writes the same values to \texttt{
 \caption{Output of \texttt{python -m rm\_flatness\_nav.sim} (simulation, not hardware data).}
 \end{figure}
 
-\section{Run 5 and the trials with the printed tags lying flat}
+\section{Run 3 and the other trials with the printed tags lying flat}
 After the runs above, all three printed tags (\texttt{tag36h11}, IDs 1, 2, 3, black square 150\,mm) were laid flat on the carpet, as the assignment describes, with Tag~3 in the middle and Tags~1 and~2 about 0.3\,m to its left and right as distractors. The node follows only ID~3.
 \paragraph{Static detection test (real camera frames).} With the row 0.6\,m in front of the robot, the project's own detector (native scale) found all three tags: Tag~1 83$\times$27\,px, Tag~3 69$\times$27\,px, Tag~2 84$\times$28\,px (Figure~\ref{fig:flat}). With the row moved to about 0.8\,m only Tag~2 was found, at 47$\times$9\,px, and Tag~3 was missed; at about 1\,m nothing was found. So in a single frame a flat tag is readable out to roughly 0.6 to 0.7\,m with this camera. The node's search is more tolerant (it also tries a 2$\times$ enlarged image and sees the tag over several frames).
 \begin{figure}[H]\centering
 \includegraphics[width=\linewidth]{../figures/fig_tag3_camera.png}
 \caption{What the robot's camera sees of Tag~3 (real frame, tags placed 0.6\,m in front of the robot). (a) Raw frame; the claw of the gripper is visible at the bottom. (b) The three printed tags lie flat and all are found by the project's detector; only ID~3 (green) is the target, the others (orange) are ignored. (c) Tag~3 enlarged six times: the flat tag is only 27\,px tall, yet its 6$\times$6 data cells and black border are still readable. The ground range from the pose of this single frame is 0.71\,m (the tags were placed at 0.6\,m from the front of the robot, the range is measured from the camera to the tag centre).}\label{fig:flat}
 \end{figure}
-\paragraph{Mission attempts.} Four autonomous attempts were made with this layout. \textbf{One reached ARRIVED: run 5} (Table~1 and the main plot). In the first attempt the tag was not detected during a 33\,s sweep. The other two (later) attempts detected the tag, aligned and chased for several seconds, then lost it and returned to SEARCHING without halting; in both the logged distances were about 100 times too large (for example 95.8 in the log, i.e.\ 0.96\,m if the factor of 100 is removed), which is what a tag size typed as 15 instead of 0.15 would produce; because of this scale error the rule that continues the trajectory when the tag leaves the image (it only applies within 1.8\,m) could not act. This cause is inferred from the numbers; the node's start-up line with the tag size was not kept. The tag-size prompt of the helper script now rejects implausible values. The logs of the unsuccessful attempts are in \texttt{logs/flat\_failed\_attempts/}. Run 5 has no 20\,Hz log (only \texttt{motor\_voltage\_log.csv} at 1\,Hz was written), so its plot has one point per second.
+\paragraph{Mission attempts.} Four autonomous attempts were made with this layout. \textbf{One reached ARRIVED: run 3} (Table~1 and the main plot). In the first attempt the tag was not detected during a 33\,s sweep. The other two (later) attempts detected the tag, aligned and chased for several seconds, then lost it and returned to SEARCHING without halting; in both the logged distances were about 100 times too large (for example 95.8 in the log, i.e.\ 0.96\,m if the factor of 100 is removed), which is what a tag size typed as 15 instead of 0.15 would produce; because of this scale error the rule that continues the trajectory when the tag leaves the image (it only applies within 1.8\,m) could not act. This cause is inferred from the numbers; the node's start-up line with the tag size was not kept. The tag-size prompt of the helper script now rejects implausible values. The logs of the unsuccessful attempts are in \texttt{logs/flat\_failed\_attempts/}. Run 3 has no 20\,Hz log (only \texttt{motor\_voltage\_log.csv} at 1\,Hz was written), so its plot has one point per second.
 
 
-\paragraph{Photographs of the trials.} Figure~\ref{fig:photos} shows phone photographs taken during the flat-tag trials. Panel (a) shows the starting layout with the phone's measure tool reading 1.5\,m between the robot and the tags, which supports the upper end of the hand-measured start range of 1.2 to 1.5\,m; panel (b) is a closer placement (69\,cm) photographed during the trials, and is not used for any number in this report. Panels (c) and (d) show the robot after it stopped in front of Tags 1, 3 and 2 (left to right); the stop gap quoted in the text (about 20\,cm to the sheet edge) is the hand measurement and is not read off these perspective photos, but the photos agree that the front of the robot is a clear distance from the black square.
+\paragraph{Photographs of the trials.} Figure~\ref{fig:photos} shows phone photographs taken during the flat-tag trials. Panel (a) shows the starting layout with the phone's measure tool reading 1.5\,m between the robot and the tags, which supports the upper end of the hand-measured start range of 1.2 to 1.5\,m; panel (b) is a closer placement (69\,cm) photographed during the trials, and is not used for any number in this report. Panels (c) and (d) show the robot after it stopped in front of Tags 1, 3 and 2 (left to right); the stop gap quoted in the text (about 20\,cm from the tag) is the hand measurement and is not read off these perspective photos.
 \begin{figure}[H]\centering
 \includegraphics[width=\linewidth]{../figures/fig_run_photos.png}
 \caption{Phone photographs from above during the flat-tag trials: (a) start layout with the phone measure at 1.5\,m, (b) a closer placement (69\,cm), (c) and (d) the robot after it stopped.}\label{fig:photos}
@@ -340,13 +311,12 @@ After the runs above, all three printed tags (\texttt{tag36h11}, IDs 1, 2, 3, bl
 
 \section{Deviations from the assignment text and limitations}
 \begin{itemize}
-  \item \textbf{Tag orientation.} The assignment places the tag \emph{flat} on the floor. Run 5 does so. Runs 3 and 4 used the tag standing upright because a flat 15\,cm tag is a thin sliver for this camera (Figure~\ref{fig:vis}); a single frame reads a flat tag only out to about 0.6 to 0.7\,m, although the node (with its upscaled search and several frames) found it at 1.07\,m in run 5.
-  \item \textbf{Distance.} The assignment gives 1.5 to 1.8\,m. In run 5 the tags started about 1.2 to 1.5\,m away by hand measurement (the camera reported 1.07\,m to the tag centre at the first detection), at or slightly below that range, and the robot stopped about 20\,cm from the sheet edge (about 38\,cm from the tag centre) instead of the planned 20\,cm. In runs 3 and 4: The tag was about 1.3 to 1.4\,m away (the robot only rotates before the chase, so the camera range at the first detection is the starting distance: 1.375\,m in run 3 and 1.28\,m in run 4). The detector could see further with its upscaled search, but the tag was not placed there.
+  \item \textbf{Distance.} The assignment gives 1.5 to 1.8\,m. In the final run the tags started about 1.2 to 1.5\,m away by hand measurement (the camera reported 1.07\,m to the tag centre at the first detection), at or slightly below that range.
   \item \textbf{Camera and arm.} The arm pose did not change the camera view; the camera tilt of about $20^\circ$ was read from images.
-  \item \textbf{Stop source.} The stop came from the planned trajectory, not from a camera or ToF reading. The sensor brakes are implemented and unit-tested but were not triggered on the robot.
+  \item \textbf{Stop source.} In the logged run the stop came from the end of the planned trajectory (state \texttt{ARRIVED (trajectory end, tag out of view)}; the ToF column is empty), not from a camera or ToF reading. The sensor brakes are implemented and unit-tested; the log does not show them acting on the robot.
   \item \textbf{Voltages} are model values computed from commanded velocities (Eq.~(5)); they are not measured at the motors.
-  \item \textbf{Number of trials.} Three successful runs (3 and 4 upright, 5 flat); stop gaps were measured by hand to about 1\,cm. Run 5 has only a 1\,Hz log and a hand-measured start range.
-  \item \textbf{Tags~1 and~2.} Runs 3 and~4 used Tag~3 alone. In run~5 and the other flat-tag trials, Tags~1 and~2 lay beside Tag~3 as distractors; the node followed only ID~3 and the log does not record which other tags were seen.
+  \item \textbf{Number of trials.} One successful run (run 3); the stop gap was measured by hand to about 1\,cm. It has only a 1\,Hz log and a hand-measured start range. Other flat-tag attempts failed and are described above.
+  \item \textbf{Tags~1 and~2.} In the final run and the other flat-tag trials, Tags~1 and~2 lay beside Tag~3 as distractors; the node followed only ID~3 and the log does not record which other tags were seen.
 \end{itemize}
 
 \section{Deliverables checklist}

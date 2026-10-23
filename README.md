@@ -32,12 +32,12 @@ The robot's camera is fixed to its chassis and looks about 20 degrees down. Tags
 | | Assessment 1 | Assessment 2 |
 |---|---|---|
 | Link | wired USB (RNDIS) vs the robot's Wi-Fi AP | wired USB |
-| Main numbers | ping 0.45 ms (USB) vs 28.3 ms (AP), 0% loss; telemetry interval 102.3 +/- 8.8 ms (USB) vs 120.2 +/- 52.3 ms (AP) | run 5 (flat tags): search 8.0 s, align 2.0 s, chase about 8.9 s, peak 0.136 m/s, all voltages 0.000 V at the stop |
-| Reports | `Assignment 1/report/report.pdf` (27 pages) | `Assignment 2/report/report.pdf` (23 pages) |
+| Main numbers | ping 0.45 ms (USB) vs 28.3 ms (AP), 0% loss; telemetry interval 102.3 +/- 8.8 ms (USB) vs 120.2 +/- 52.3 ms (AP) | flat tags: search 8.0 s, align 2.0 s, chase about 8.9 s, peak 0.136 m/s, all voltages 0.000 V at the stop, about 20 cm from the tag |
+| Reports | `Assignment 1/report/report.pdf` (27 pages) | `Assignment 2/report/report.pdf` (21 pages) |
 
 <p align="center">
-  <img src="Assignment%202/figures/fig_v_V1.png" width="70%" alt="Forward speed and motor voltage V1 during run 5">
-  <br><em>Run 5: forward speed v(t) and motor voltage V1(t) (1 Hz log).</em>
+  <img src="Assignment%202/figures/fig_v_V1.png" width="70%" alt="Forward speed and motor voltage V1 during the final run">
+  <br><em>Final run: forward speed v(t) and motor voltage V1(t) (1 Hz log).</em>
 </p>
 
 Assessment 1 also contains the NumPy 2 ABI failure reproduced for real, the mecanum inverse and forward kinematics with a numerical check, the ROS 2 TF tree, and a ROS 2 bag with strafing.
@@ -80,10 +80,10 @@ ros2 launch rm_flatness_nav flatness_nav.launch.py tag_id:=3 tag_size:=0.15 csv_
 
 ## Honest notes
 
-- Run 5 used the three printed tags lying flat; runs 3 and 4 used the tag standing upright. The start distance was 1.2 to 1.5 m, below the assignment's 1.5 to 1.8 m.
-- In run 5 the robot stopped about 20 cm from the edge of the A4 sheet, which is about 38 cm from the tag centre, so it stopped short of the planned 20 cm to the centre. The report explains this.
+- The final run used the three printed tags lying flat. The start distance was 1.2 to 1.5 m (hand-measured range), below the assignment's 1.5 to 1.8 m, and the robot stopped about 20 cm from the tag.
+- The log shows the stop came from the end of the planned trajectory (`ARRIVED (trajectory end, tag out of view)`, empty ToF column), not from a sensor reading.
 - Motor voltages are model values computed from the commanded velocities, not measurements at the motors.
-- Several failed attempts are kept in `Assignment 2/logs/` rather than hidden.
+- The final run only has a 1 Hz log. Several failed attempts are kept in `Assignment 2/logs/` rather than hidden.
 
 ## Demonstration videos
 
