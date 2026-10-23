@@ -17,3 +17,12 @@ dist(m)  rows_visible_px  width_px  centre_row   (rows < ~15 px usually undetect
    1.2          8.1       39.2         137
    1.5          5.3       31.8         124
    1.8          3.8       26.8         115
+assumed camera: 0.25 m above the floor, 20 deg below horizontal; tag side 0.15 m
+dist(m)  rows_visible_px  width_px  centre_row   (rows < ~15 px usually undetectable)
+   0.4         57.0      103.1         254
+   0.6         28.5       73.2         199
+   0.8         17.0       56.8         169
+   1.0         11.3       46.4         150
+   1.2          8.1       39.2         137
+   1.5          5.3       31.8         124
+   1.8          3.8       26.8         115

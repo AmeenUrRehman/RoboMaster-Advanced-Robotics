@@ -16,6 +16,8 @@ import re
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+plt.rcParams.update({'font.family': 'serif', 'font.serif': ['cmr10', 'DejaVu Serif'], 'mathtext.fontset': 'cm',
+                     'axes.formatter.use_mathtext': True, 'axes.unicode_minus': False, 'font.size': 10})
 import numpy as np
 
 COLORS = {'RNDIS (wired)': '#1f6feb', 'AP (wireless)': '#d9480f'}

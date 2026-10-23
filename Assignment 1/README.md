@@ -1,44 +1,58 @@
-# SCE 672 Assessment 1: RoboMaster EP
+# Assessment 1: System provisioning, keyboard teleoperation, telemetry and ROS 2 integration
 
-Layout
-- `ep_teleop_sdk.py`  Problem 2 script (native SDK, curses keyboard, 10 Hz CSV telemetry)
-- `rm_setup.sh`       environment loader (also copied to `~/rm_setup.sh`)
-- `scripts/`          `ping_bench.sh`, `analyze_telemetry.py`, `plot_odom.py`
-- `logs/`             raw CSVs, ping output, rosbag, `system_diagnostics.txt`
-- `figures/`          generated plots, `frames.pdf`
-- `report/report.tex` the PDF report (search for `TODO` to find what still needs hardware data)
+Platform: DJI RoboMaster EP Core, Ubuntu 24.04, ROS 2 Jazzy, Python 3.12, NumPy 1.26.
 
-Compile the report: `~/tools/tectonic/tectonic -X compile report/report.tex`
+## Contents
+| Path | Purpose |
+|---|---|
+| `ep_teleop_sdk.py` | Standalone keyboard teleoperation and 10 Hz telemetry logger using only the native `robomaster` SDK (no ROS 2 imports). |
+| `rm_setup.sh` | Environment loader: sources ROS 2 and the workspace, activates the venv, sets `PYTHONPATH` and `PYTHONNOUSERSITE` so a NumPy 2.x install cannot shadow the NumPy 1.26 that the ROS 2 binaries were built against. |
+| `run_ap_all.sh` | Scripted Wi-Fi (AP) session: ping benchmark, SDK teleop, ROS 2 driver, TF tree, bag recording, odometry plot. |
+| `scripts/` | `ping_bench.sh`, `analyze_telemetry.py` (interval and RTT statistics and plots), `plot_odom.py` (trajectory from the bag, in the start-pose frame). |
+| `logs/` | Raw data: `rndis_run.csv`, `ap_run.csv`, `ping_*.txt`, driver and verification logs, `bag_ap/` (rosbag2, MCAP). |
+| `figures/` | Plots and the TF tree (`frames.pdf`). |
+| `report/` | `report.tex` and the compiled `report.pdf`. |
 
-## Hardware runbook (run from this folder)
+## Teleoperation script
+```
+source ~/rm_setup.sh
+python ep_teleop_sdk.py --conn rndis --duration 30 --out logs/rndis_run.csv   # robot on USB
+python ep_teleop_sdk.py --conn ap    --duration 30 --out logs/ap_run.csv      # robot on its own Wi-Fi
+```
+Keys: `W/S` forward/back, `A/D` strafe left/right, `Q/E` yaw, `Space` stop, `X` quit. Releasing the keys stops the chassis.
+SDK sign convention: x forward, y to the right, yaw clockwise.
 
-Always start a terminal with `source ~/rm_setup.sh`.
+CSV columns: `t_rel_s, t_unix, batt_pct, yaw_deg, pitch_deg, roll_deg, w_fr_rpm, w_fl_rpm, w_rl_rpm, w_rr_rpm, t_esc_rx_unix, cmd_vx, cmd_vy, cmd_wz`
+(`t_esc_rx_unix` is the arrival time of the newest wheel-speed packet, used for the telemetry-interval analysis).
 
-### Problem 2(ii): wired RNDIS
-1. Controller switch to **Direct/USB**, Micro-USB data cable to the laptop, robot powered on.
-2. `ip -br addr` and note the new interface name and IP (Table 1). `ping -c 3 192.168.42.2` must answer.
-3. `python ep_teleop_sdk.py --conn rndis --duration 30 --out logs/rndis_run.csv`
-   (W/S, A/D, Q/E, Space = stop, X = quit). Screenshot the terminal.
-4. `scripts/ping_bench.sh rndis`
+## ROS 2 part (robot in AP mode, laptop on the robot Wi-Fi)
+```
+source ~/rm_setup.sh
+ros2 launch robomaster_ros ep.launch conn_type:=ap
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ros2 bag record -o logs/bag_ap /odom /joint_states /cmd_vel
+ros2 run tf2_tools view_frames
+python scripts/plot_odom.py logs/bag_ap --true-end <x> <y> --out figures   # x forward, y left, metres, from the start pose
+```
 
-### Problem 2(iii): wireless AP
-1. Switch to **AP**. Join the `ROBOMASTER-XXXXXX` Wi-Fi network. `ip -br addr` and note interface and IP.
-2. `python ep_teleop_sdk.py --conn ap --duration 30 --out logs/ap_run.csv`
-3. `scripts/ping_bench.sh ap`
-4. `python scripts/analyze_telemetry.py --rndis-csv logs/rndis_run.csv --ap-csv logs/ap_run.csv --rndis-ping logs/ping_rndis.txt --ap-ping logs/ping_ap.txt --out figures`
-   Numbers for Table 1 and the discussion are in `figures/stats.json`.
+## Analysis
+```
+python scripts/analyze_telemetry.py --rndis-csv logs/rndis_run.csv --ap-csv logs/ap_run.csv \
+    --rndis-ping logs/ping_rndis.txt --ap-ping logs/ping_ap.txt --out figures
+```
 
-### Problem 3 (stay in AP mode)
-Terminal A: `ros2 launch robomaster_ros ep.launch conn_type:=ap`
-Terminal B: `ros2 topic list`, `ros2 topic hz /odom`, `ros2 topic hz /joint_states` (screenshot all)
-Terminal C: `ros2 bag record -o logs/bag_ap /odom /joint_states /cmd_vel`
-Terminal D: `ros2 run teleop_twist_keyboard teleop_twist_keyboard`  (drive a path with forward AND strafing legs, e.g. an L shape)
-Stop the bag with Ctrl+C. Measure the robot's true end position with a tape from the start pose.
-`ros2 bag info logs/bag_ap` (screenshot)
-`python scripts/plot_odom.py logs/bag_ap --true-end X Y --out figures`
+## Main measured results
+| | Wired (RNDIS) | Wireless (AP) |
+|---|---|---|
+| Ping RTT, N=100 (mean / 95th percentile / max) | 0.45 / 0.56 / 2.75 ms | 28.3 / 127 / 152 ms |
+| Telemetry interval (mean, std) | 102.3 ms, 8.8 ms | 120.2 ms, 52.3 ms |
+| Packet loss (ping) | 0 % | 0 % |
 
-### Problem 4(iii)
-With the driver running: `ros2 run tf2_tools view_frames` then move `frames.pdf` into `figures/`.
+## Status
+Done: environment, SDK script, wired and AP runs, latency analysis, ROS 2 driver over AP, TF tree, bag, kinematic derivation.
+Open: a ROS 2 run with lateral strafing and a tape-measured end position for the odometry error; demonstration video links.
 
-### Video (D3, 45 s max)
-(a) SDK teleop with the live telemetry display, (b) ROS 2 teleop over AP with `ros2 topic echo /odom` in a second terminal.
+## Build the report
+```
+tectonic -X compile report/report.tex     # or: xelatex report/report.tex
+```

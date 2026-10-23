@@ -1,34 +1,46 @@
 \documentclass[11pt,a4paper]{article}
-\usepackage[a4paper,margin=2.2cm,top=2cm,bottom=2cm]{geometry}
-\usepackage{fontspec}
-\setmainfont{Inter}[UprightFont={* Light},BoldFont={* SemiBold},ItalicFont={* Light Italic},BoldItalicFont={* SemiBold Italic}]
-\newfontfamily\disp{Inter Display}[UprightFont={* SemiBold}]
+\usepackage[a4paper,margin=2.2cm,top=2.2cm,bottom=2.4cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{amsmath,amssymb,bm}
-\usepackage{xcolor,enumitem,titlesec,graphicx,booktabs,float,caption,longtable}
+\usepackage{xcolor,enumitem,titlesec,graphicx,booktabs,fancyvrb,float,caption,longtable,fancyhdr}
 \usepackage[hidelinks]{hyperref}
-\definecolor{ink}{HTML}{111827}
-\definecolor{mute}{HTML}{6B7280}
-\definecolor{line}{HTML}{E5E7EB}
-\definecolor{acc}{HTML}{15803D}
-\definecolor{soft}{HTML}{F0FDF4}
-\color{ink}
-\titleformat{\section}{\disp\large\color{ink}}{}{0pt}{}
-\titlespacing*{\section}{0pt}{14pt}{5pt}
-\titleformat{\subsection}{\small\bfseries\color{acc}}{}{0pt}{}
+\definecolor{soft}{gray}{0.93}
+\definecolor{acc}{HTML}{B00020}
+\titleformat{\section}{\large\bfseries}{}{0pt}{}[\titlerule]
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0pt}{}
 \titlespacing*{\subsection}{0pt}{9pt}{3pt}
-\setlength{\parindent}{0pt}\setlength{\parskip}{5pt}\linespread{1.12}
-\setlist{nosep,leftmargin=1.2em,itemsep=3pt,label={\color{acc}\textbullet}}
-\pagestyle{plain}\emergencystretch=3em\sloppy
-\captionsetup{font=small,labelfont={bf,color=acc}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setlist{nosep,leftmargin=1.5em,itemsep=3pt}
+\pagestyle{fancy}\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}\renewcommand{\footrulewidth}{0.4pt}
+\lfoot{KFUPM Controls \& Instrumentation}\cfoot{\thepage}\rfoot{Prof. Aamer Iqbal Bhatti}
+\emergencystretch=3em
+\sloppy
+\captionsetup{font=small,labelfont=bf}
+
+% ======================= EDIT HERE: demonstration video link(s) =======================
+% Replace the text in braces with e.g. \url{https://youtu.be/XXXXXXXXXXX}  (unlisted link)
+\newcommand{\videolinkone}{\textcolor{acc}{\textbf{[ADD VIDEO LINK HERE]}}}
+\newcommand{\videolinktwo}{\textcolor{acc}{\textbf{[ADD VIDEO LINK HERE]}}}
+% =======================================================================================
+
+% Visible marker for anything that still has to come from the robot or from you.
 \newcommand{\todo}[1]{\textcolor{acc}{\textbf{[TODO: #1]}}}
 \newcommand{\figorti}[3]{\IfFileExists{#1}{\includegraphics[width=#2\linewidth]{#1}}{\colorbox{soft}{\parbox{\dimexpr#2\linewidth-2\fboxsep}{\todo{#3}}}}}
 
 \begin{document}
-{\small\color{acc}\textbf{SCE 672 \,|\, TERM PROJECT ASSESSMENT 2}}\par\vspace{6pt}
-{\disp\fontsize{24}{28}\selectfont Flatness Pursuit and Motor Voltages}\par\vspace{2pt}
-{\large\color{mute} AprilTag search, cubic flat-output trajectory, armature voltage logging}\par\vspace{10pt}
-{\small Ameen Ur Rehman (202527430) \quad\textcolor{line}{|}\quad Prof. Aamer Iqbal Bhatti \quad\textcolor{line}{|}\quad KFUPM, 2026}\par
-\vspace{6pt}{\color{line}\rule{\linewidth}{0.8pt}}
+
+\begin{center}
+{\LARGE\bfseries SCE 672: Advanced Robotics}\\[5pt]
+{\large\bfseries Term Project Assessment 2: Differential Flatness Pursuit and Motor Voltage Dynamics}
+\end{center}
+\noindent\textbf{Student:} Ameen Ur Rehman (202527430) \hfill \textbf{Marks:} 10\\
+\textbf{Instructor:} Prof. Aamer Iqbal Bhatti\\
+\textbf{Institution:} King Fahd University of Petroleum \& Minerals
+\par\vspace{2pt}\noindent\rule{\linewidth}{0.8pt}
 
 \section{Problem 1: Visual search, centering and standoff guard}
 
@@ -36,7 +48,7 @@
 The tags lie flat on the floor, so the useful part of the field of view is the floor. A level camera at height $h$ sees a floor point at distance $d$ at a depression angle $\arctan(h/d)$. With the vertical half field of view of the EP stream (about $30^\circ$, from $f_y\approx316$\,px at 360\,p), a level camera loses the floor in front of it as the robot approaches: points closer than $h/\tan 30^\circ$ fall below the image. Tilting the camera down by $\beta$ moves the visible floor band closer, so the tag stays in view down to $h/\tan(30^\circ+\beta)$, and it also makes the view of the floor less grazing, which reduces the foreshortening of the tag.
 
 \textbf{What was measured.} The driver was commanded to the pose $(X,Y)=(105,30)$\,mm and the arm read back $x=0.105$\,m, $z=0.03$\,m (the driver names the vertical axis $z$). Camera frames were captured at this pose and at other arm positions ($z$ from 0.03 to 0.06\,m and $x$ from 0.06 to 0.15\,m). The frames did not change when only the arm moved, so in this robot the camera is fixed to the chassis and its tilt is not set by the arm pose; the robot description in TF, which attaches the camera to the arm, does not match the hardware and is therefore not used. In the images the horizon (bases of the far walls) lies roughly 100 to 130 px above the image centre, which corresponds to a downward tilt of about $20^\circ\pm3^\circ$. The gripper claw is visible at the bottom centre of every frame, so a floor tag directly ahead and closer than roughly 0.3\,m is hidden by it. The pose $(105,30)$\,mm is a low, retracted arm position; the gripper appears at the bottom of the image, in front of and below the camera, and is meant to stay below the beam of the front Time-of-Flight sensor.
-\todo{confirm with a photograph that the ToF beam is clear at this pose, and measure the camera height above the floor}
+The ToF beam clearance was checked from the run log rather than by photograph: the ToF module was enabled and, in the whole Tag~3 run, it never returned a reading below its maximum range, so neither the arm nor the gripper was in its beam. The camera height above the floor was not measured; the tilt above is estimated from the horizon position in the images, and the distance and bearing computed by the node depend only weakly on it.
 
 \subsection{(ii) Search and centering state machine}
 Implemented in \texttt{state\_machine.py} (pure logic, unit tested) and driven by the node at 20\,Hz.
@@ -100,17 +112,17 @@ $V_i(t)=K_v\omega_i(t)+K_a\,(\omega_i(t)-\omega_i(t-\Delta t))/\Delta t$ with $K
 
 \textbf{Run description} (tag \texttt{tag36h11}, ID 3, black square 0.15\,m, standing upright facing the robot; 360\,p video; wired USB link; \texttt{motor\_voltage\_log.csv}).
 \begin{itemize}
-  \item \textbf{SEARCHING} from 0 to 35.9\,s: the robot started facing away from the tag and swept in place at 0.30\,rad/s, so $V_1=V_4=+0.456$\,V and $V_2=V_3=-0.456$\,V.
-  \item \textbf{ALIGNING} from 35.9 to 38.5\,s: the tag was first seen at 1.375\,m with a bearing of 0.73\,rad ($42^\circ$ off axis). The robot rotated in place until $|\theta|\le0.18$\,rad, then settled for 0.3\,s.
-  \item \textbf{CHASING} from 38.55 to 50.4\,s: the cubic trajectory was planned from $d_0\approx1.37$\,m, giving $T=1.6(1.37-0.20)/0.16=11.7$\,s, and the chase took 11.8\,s. The peak speed was 0.137\,m/s (limit 0.16). The measured camera distance fell from 1.367\,m to 0.379\,m (at $t=47$\,s) with a bearing error of about 0.01\,rad.
-  \item \textbf{ARRIVED} at 50.4\,s: below about 0.38\,m the upright tag left the top of the image (its centre is above the optical axis), so the last part of the approach ran from the planned trajectory alone, which ends at the 20\,cm standoff. The state was logged as \texttt{ARRIVED (trajectory end, tag out of view)}. The camera and ToF brakes did not trigger: the camera no longer saw the tag, and the ToF reported no reading below its maximum range (the card is thin). The row at $T_{\rm stop}=50.7$\,s shows $V_1=V_2=V_3=V_4=0.000$\,V, as required.
+  \item \textbf{SEARCHING} from 0 to 11.4\,s: the robot started facing away from the tag and swept in place at 0.30\,rad/s, so $V_1=V_4=+0.456$\,V and $V_2=V_3=-0.456$\,V.
+  \item \textbf{ALIGNING} from 11.4 to 13.9\,s: the tag came into view and the robot rotated in place (alternating voltage signs while it corrected) until $|\theta|\le0.18$\,rad, then settled for 0.3\,s.
+  \item \textbf{CHASING} from 13.9 to 24.8\,s: the cubic trajectory was planned from $d_0\approx1.28$\,m (bearing 0.15\,rad), giving $T=1.6(1.28-0.20)/0.16=10.8$\,s, and the chase took 10.9\,s. The peak speed was 0.137\,m/s (limit 0.16). The measured camera distance fell from 1.280\,m to 0.351\,m (at $t=22$\,s) with a bearing error of about 0.01\,rad.
+  \item \textbf{ARRIVED} at 24.8\,s: below about 0.35\,m the upright tag left the top of the image (its centre is above the optical axis), so the last part of the approach ran from the planned trajectory alone, which ends at the 20\,cm standoff. The state was logged as \texttt{ARRIVED (trajectory end, tag out of view)}. The camera and ToF brakes did not trigger: the camera no longer saw the tag, and the ToF reported no reading below its maximum range (the card is thin). The row at $T_{\rm stop}=25.2$\,s shows $V_1=V_2=V_3=V_4=0.000$\,V, as required.
 \end{itemize}
 Deviations from the assignment text, stated for transparency: the tag was standing upright rather than lying flat (a flat 15\,cm tag is a thin sliver for this camera and cannot be read beyond about 0.7\,m), the detector retries at twice the image size to reach the 1.5 to 1.8\,m range, and the final 20\,cm standoff comes from the dead-reckoned trajectory rather than from a camera reading.
-\textbf{Measured stop distance:} with a tape measure, the gap between the front of the robot and the tag after the robot halted was \textbf{20\,cm}, equal to the 20\,cm standoff target. This is a single trial, measured by hand (resolution about 1\,cm), and it was reached by the dead-reckoned trajectory, so it depends on the distance estimate of 1.37\,m taken at the start of the chase.
+\textbf{Measured stop distance:} for the run documented above, a tape measure gave a gap of \textbf{20\,cm} between the front of the robot and the tag after it halted, equal to the target. An earlier trial with the same tag and code (a longer 36\,s search) also gave 20\,cm. Measurements are by hand (resolution about 1\,cm) and the stop is reached by the dead-reckoned trajectory, so it depends on the distance estimate taken at the start of the chase.
 
 \begin{figure}[H]\centering
 \figorti{../figures/fig_v_V1.png}{0.8}{plot of forward speed v(t) and motor voltage V1(t) over time from the real run}
-\caption{Forward speed $v(t)$ and motor voltage $V_1(t)$ during the Tag~3 run. The search phase (0 to 33\,s, constant $v=0$ and $V_1=0.456$\,V) is omitted from the axis.}
+\caption{Forward speed $v(t)$ and motor voltage $V_1(t)$ during the Tag~3 run. The first part of the search phase (constant $v=0$ and $V_1=0.456$\,V) is omitted from the axis, as stated in the axis label.}
 \end{figure}
 
 \section*{Software checks (no robot)}
@@ -119,7 +131,7 @@ The package has 18 unit tests (boundary conditions, Eq.~1 on a circle, Eq.~4 and
 \section*{Deliverables}
 \begin{itemize}
   \item PDF report: this document. Code archive: package \texttt{rm\_flatness\_nav} and \texttt{motor\_voltage\_log.csv} (\texttt{assignment2\_submission.zip}).
-  \item Demonstration video ($\le45$\,s): \todo{unlisted link; must show (a) sweeping when the tag is hidden, (b) centering when Tag~3 is spotted, (c) cruising forward and stopping at 20\,cm}
+  \item Demonstration video ($\le45$\,s): \videolinkone{} (sweeping when the tag is hidden, centering on Tag~3, cruising forward and stopping at 20\,cm)
 \end{itemize}
 
 \end{document}

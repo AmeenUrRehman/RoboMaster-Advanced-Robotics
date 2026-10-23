@@ -237,7 +237,12 @@ def main(args=None):
     rclpy.init(args=args)
     node = FlatnessNav()
     try:
-        rclpy.spin(node)
+        # exit by itself shortly after the robot has halted, so the caller does not wait for a timeout
+        while rclpy.ok() and not node.finished:
+            rclpy.spin_once(node, timeout_sec=0.1)
+        t_end = time.time() + 1.0
+        while rclpy.ok() and time.time() < t_end:
+            rclpy.spin_once(node, timeout_sec=0.1)     # let the final zero commands go out
     except KeyboardInterrupt:
         pass
     finally:

@@ -1,43 +1,46 @@
 \documentclass[11pt,a4paper]{article}
-\usepackage[a4paper,margin=2.2cm,top=2cm,bottom=2cm]{geometry}
-\usepackage{fontspec}
-\setmainfont{Inter}[UprightFont={* Light},BoldFont={* SemiBold},ItalicFont={* Light Italic},BoldItalicFont={* SemiBold Italic}]
-\newfontfamily\disp{Inter Display}[UprightFont={* SemiBold}]
+\usepackage[a4paper,margin=2.2cm,top=2.2cm,bottom=2.4cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{amsmath,amssymb,bm}
-\usepackage{xcolor,tikz,enumitem,titlesec,graphicx,booktabs,fancyvrb,float,caption}
+\usepackage{xcolor,enumitem,titlesec,graphicx,booktabs,fancyvrb,float,caption,longtable,fancyhdr}
 \usepackage[hidelinks]{hyperref}
-\usetikzlibrary{arrows.meta,positioning}
-\definecolor{ink}{HTML}{111827}
-\definecolor{mute}{HTML}{6B7280}
-\definecolor{line}{HTML}{E5E7EB}
-\definecolor{acc}{HTML}{0369A1}
-\definecolor{soft}{HTML}{F0F9FF}
-\color{ink}
-\titleformat{\section}{\disp\large\color{ink}}{}{0pt}{}
-\titlespacing*{\section}{0pt}{14pt}{5pt}
-\titleformat{\subsection}{\small\bfseries\color{acc}}{}{0pt}{}
+\definecolor{soft}{gray}{0.93}
+\definecolor{acc}{HTML}{B00020}
+\titleformat{\section}{\large\bfseries}{}{0pt}{}[\titlerule]
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0pt}{}
 \titlespacing*{\subsection}{0pt}{9pt}{3pt}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{5pt}
-\linespread{1.12}
-\setlist{nosep,leftmargin=1.2em,itemsep=3pt,label={\color{acc}\textbullet}}
-\pagestyle{plain}
+\setlist{nosep,leftmargin=1.5em,itemsep=3pt}
+\pagestyle{fancy}\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}\renewcommand{\footrulewidth}{0.4pt}
+\lfoot{KFUPM Controls \& Instrumentation}\cfoot{\thepage}\rfoot{Prof. Aamer Iqbal Bhatti}
 \emergencystretch=3em
 \sloppy
-\captionsetup{font=small,labelfont={bf,color=acc}}
+\captionsetup{font=small,labelfont=bf}
 
-% A visible marker for anything that must come from real hardware runs.
+% ======================= EDIT HERE: demonstration video link(s) =======================
+% Replace the text in braces with e.g. \url{https://youtu.be/XXXXXXXXXXX}  (unlisted link)
+\newcommand{\videolinkone}{\textcolor{acc}{\textbf{[ADD VIDEO LINK HERE]}}}
+\newcommand{\videolinktwo}{\textcolor{acc}{\textbf{[ADD VIDEO LINK HERE]}}}
+% =======================================================================================
+
+% Visible marker for anything that still has to come from the robot or from you.
 \newcommand{\todo}[1]{\textcolor{acc}{\textbf{[TODO: #1]}}}
 \newcommand{\figorti}[3]{\IfFileExists{#1}{\includegraphics[width=#2\linewidth]{#1}}{\colorbox{soft}{\parbox{\dimexpr#2\linewidth-2\fboxsep}{\todo{#3}}}}}
-\newcommand{\callout}[1]{\colorbox{soft}{\parbox{\dimexpr\linewidth-2\fboxsep}{#1}}}
 
 \begin{document}
 
-{\small\color{acc}\textbf{SCE 672 \,|\, TERM PROJECT ASSESSMENT 1}}\par\vspace{6pt}
-{\disp\fontsize{24}{28}\selectfont RoboMaster EP: Provisioning, Teleop, ROS 2}\par\vspace{2pt}
-{\large\color{mute} Keyboard teleoperation, telemetry, and middleware integration}\par\vspace{10pt}
-{\small Ameen Ur Rehman (202527430) \quad\textcolor{line}{|}\quad Prof. Aamer Iqbal Bhatti \quad\textcolor{line}{|}\quad KFUPM, 2026}\par
-\vspace{6pt}{\color{line}\rule{\linewidth}{0.8pt}}
+\begin{center}
+{\LARGE\bfseries SCE 672: Advanced Robotics}\\[5pt]
+{\large\bfseries Term Project Assessment 1: System Provisioning, Keyboard Teleoperation, Telemetry, and ROS 2 Integration}
+\end{center}
+\noindent\textbf{Student:} Ameen Ur Rehman (202527430) \hfill \textbf{Marks:} 10\\
+\textbf{Instructor:} Prof. Aamer Iqbal Bhatti\\
+\textbf{Institution:} King Fahd University of Petroleum \& Minerals
+\par\vspace{2pt}\noindent\rule{\linewidth}{0.8pt}
 
 \section{Problem 1: Host environment and middleware}
 
@@ -85,12 +88,14 @@ SDK sign convention: $x$ forward, $y$ to the \emph{right}, $\omega_z$ \emph{cloc
 \subsection{(ii) Wired RNDIS run (30\,s)}
 Controller switch on Direct/USB, Micro-USB data cable, \texttt{python ep\_teleop\_sdk.py --conn rndis --duration 30 --out logs/rndis\_run.csv}.
 \textbf{Result.} Complete 30\,s run: 299 rows over 29.9\,s (10\,Hz) with battery, attitude and all four wheel speeds logged and no missing values; the newest ESC packet arrived 0.04\,s before the file ended, so the link stayed up for the whole run. Forward and lateral commands were used ($|v_x|=|v_y|=0.3$\,m/s), yaw was not. The telemetry arrival interval was $102.3\pm8.8$\,ms (min 98.3, max 202.5, 95th percentile 107.0, $n=291$); the single 200\,ms gap is one late packet. (An earlier wired attempt was cut to 9.6\,s by a USB enumeration failure and was replaced by this run.)
-\todo{attach terminal snapshot of the live telemetry display}
+Terminal log of the run (excerpt of \texttt{logs/rndis\_run.csv}; the first row precedes the first wheel-speed packet, hence \texttt{nan}):
+{\footnotesize\VerbatimInput[fontsize=\tiny]{../logs/excerpt_rndis.txt}}
 
 \subsection{(iii) Wireless AP run (30\,s)}
 Switch on AP mode, laptop joined to the robot's access point (network profile \texttt{RMEP-21b442}), \texttt{python ep\_teleop\_sdk.py --conn ap --duration 30 --out logs/ap\_run.csv}.
 \textbf{Result.} 299 rows over 29.9\,s (10\,Hz); battery, attitude and wheel speeds were logged and all three motions were used (forward and lateral at 0.3\,m/s, yaw at $45^\circ$/s). The ESC telemetry arrival interval was $120.2\pm52.3$\,ms (min 17.3, max 319.6, 95th percentile 222.7, $n=247$).
-\todo{attach terminal snapshot of the live telemetry display}
+Terminal log of the run (excerpt of \texttt{logs/ap\_run.csv}; the first row precedes the first wheel-speed packet, hence \texttt{nan}):
+{\footnotesize\VerbatimInput[fontsize=\tiny]{../logs/excerpt_ap.txt}}
 
 \subsection{(iv) Comparative latency analysis}
 Ping: \texttt{scripts/ping\_bench.sh rndis} and \texttt{ap} (100 packets each). Plots by \texttt{scripts/analyze\_telemetry.py}. The telemetry interval is $\Delta t=t_k-t_{k-1}$ over ESC packet arrival times (network-level), next to the logger loop interval (host scheduling only).
@@ -274,7 +279,7 @@ Beyond these, \texttt{/robot\_state\_publisher} also publishes the moving links,
 
 \section*{Deliverables}
 \begin{itemize}
-  \item D1: this report. D2: \texttt{ep\_teleop\_sdk.py}, \texttt{rm\_setup.sh}, \texttt{scripts/}, raw CSV logs, ROS bag. D3: video link \todo{unlisted YouTube/cloud link, $\le$45\,s}.
+  \item D1: this report. D2: \texttt{ep\_teleop\_sdk.py}, \texttt{rm\_setup.sh}, \texttt{scripts/}, raw CSV logs, ROS bag. D3: video link \videolinkone{} (SDK teleop with live telemetry) and \videolinktwo{} (ROS 2 teleop over AP with \texttt{/odom} echoed).
 \end{itemize}
 
 \end{document}

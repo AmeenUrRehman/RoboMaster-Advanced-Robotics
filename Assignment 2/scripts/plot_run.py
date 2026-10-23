@@ -7,6 +7,8 @@ import sys
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+plt.rcParams.update({'font.family': 'serif', 'font.serif': ['cmr10', 'DejaVu Serif'], 'mathtext.fontset': 'cm',
+                     'axes.formatter.use_mathtext': True, 'axes.unicode_minus': False, 'font.size': 10})
 import numpy as np
 
 src, dst = sys.argv[1], sys.argv[2]
