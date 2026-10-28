@@ -150,6 +150,28 @@ T=\max\!\left(4.0,\ \frac{1.6\,(d_0-0.20)}{v_{\max}}\right),\qquad v_{\max}=0.16
 \]
 Real run: $d_0=1.053$\,m, so $T=1.6\times0.853/0.16=\mathbf{8.53\,s}$. A farther tag gets more time, so the top speed stays about 0.137\,m/s.
 
+\textbf{What $T$ means.} $T$ is the time of the \emph{chase only} (step 3), not of the search or the alignment. The plan is made at the moment the robot faces the tag, so search and align have no planned time: they last as long as it takes to find the tag and turn to it.
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Step} & \textbf{Time in the log} & \textbf{Duration} & \textbf{What sets the time}\\
+\midrule
+1. Search & 0 to 8\,s & about 8\,s & how long the spin takes to see Tag 3\\
+2. Align & 8 to about 9.8\,s & about 2\,s & how far it must turn, plus 0.3\,s held steady\\
+3. Chase & about 9.8 to 18.4\,s & $T=8.53$\,s (planned) & the formula above\\
+4. Stop & \texttt{ARRIVED} row at 18.9\,s & -- & the plan ended\\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Reading the formula.}
+\begin{itemize}
+  \item $d_0-0.20=0.853$\,m is the distance to drive: the distance to the tag minus the 20\,cm standoff.
+  \item $0.853/0.16=5.3$\,s would be the time at full speed the whole way.
+  \item The factor $1.6$ adds time, because the robot starts slowly and must slow down to stop. With it, the peak speed is 0.137\,m/s, below the 0.16\,m/s limit.
+  \item The 4\,s floor is for very close tags. It did not apply here, because 8.53\,s is more than 4\,s.
+\end{itemize}
+The log writes one row per second, so it shows \texttt{ARRIVED} at 18.9\,s rather than the exact end of the plan.
+
 \subsection*{Step B: Draw a smooth curve for $x(t)$ \quad(\texttt{solve\_flat\_polynomial}, line 29)}
 The curve $x(t)=a_0+a_1t+a_2t^2+a_3t^3$ must obey four rules:
 \begin{center}\small
