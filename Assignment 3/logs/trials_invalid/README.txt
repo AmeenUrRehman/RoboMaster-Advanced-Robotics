@@ -1,0 +1,3 @@
+Trials 1-3 (2026-11-14 ~19:15) excluded: the tag stand moved during these trials, so the tape readings (47, 42, 40 cm) were measured from a shifted zero line; the camera saw the robot stop at the same place each time (z_plane 0.553/0.551/0.549 m). Repeated after fixing the stand.
+Second trial_01 (19:2x): robot was still at ~0.49 m (not on the start mark); the filter assumed 1.50 m, robot drove into the tag stand. Not measured. A start-position check was added to trial.py after this.
+Note: moving the crash run overwrote the raw trial_01.csv/mp4 of the first (47 cm) trial 1; its summary row is still in trials_invalid.csv.

@@ -1,0 +1,81 @@
+Script started on 2026-11-14 18:51:59+03:00 [COMMAND="python -u run_trials.py session --conn ap" TERM="xterm-256color" TTY="/dev/pts/3" COLUMNS="80" LINES="24"]
+[1;36mSTEP 1/5  check[0m
+[1;36mconnecting to the robot (ap) ...[0m
+  connected, battery 64 %
+  calibration loaded: False (a=1.0000, b=+0.0000), latency 0.120 s (default)
+  frame    1: tag 3  z_plane 1.328 m  calibrated 1.328 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame   11: tag 3  z_plane 1.333 m  calibrated 1.333 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame   21: tag 3  z_plane 1.321 m  calibrated 1.321 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame   31: tag 3  z_plane 1.330 m  calibrated 1.330 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame   41: tag 3  z_plane 1.328 m  calibrated 1.328 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame   51: tag 3  z_plane 1.328 m  calibrated 1.328 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame   61: tag 3  z_plane 1.325 m  calibrated 1.325 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame   71: tag 3  z_plane 1.327 m  calibrated 1.327 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame   81: tag 3  z_plane 1.363 m  calibrated 1.363 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame   91: tag 3  z_plane 1.345 m  calibrated 1.345 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame  101: tag 3  z_plane 1.332 m  calibrated 1.332 m  bearing +1.9 deg  side 80 px  img 1280x720
+  frame  111: tag 3  z_plane 1.335 m  calibrated 1.335 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame  121: tag 3  z_plane 1.331 m  calibrated 1.331 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame  131: tag 3  z_plane 1.332 m  calibrated 1.332 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame  141: tag 3  z_plane 1.336 m  calibrated 1.336 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame  151: tag 3  z_plane 1.341 m  calibrated 1.341 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame  161: tag 3  z_plane 1.337 m  calibrated 1.337 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame  171: tag 3  z_plane 1.335 m  calibrated 1.335 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame  181: tag 3  z_plane 1.336 m  calibrated 1.336 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame  191: tag 3  z_plane 1.344 m  calibrated 1.344 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame  201: tag 3  z_plane 1.343 m  calibrated 1.343 m  bearing +1.9 deg  side 78 px  img 1280x720
+  frame  211: tag 3  z_plane 1.335 m  calibrated 1.335 m  bearing +1.9 deg  side 78 px  img 1280x720
+  211 frames in 8.0 s (26.3 fps), tag in 211 frames, z_plane mean 1.3351 m, std 10.0 mm
+  battery 63 %, yaw 1.6 deg
+  slow fallback detector used in 2 frames
+[1;32mCHECK OK[0m
+[1;36mSTEP 2/5  camera calibration[0m
+[1;33mPlace the robot at rest facing the tag; measure tag plane -> front of the chassis armour (centre line).[0m
+  Suggested distances: 1.50, 1.25, 1.00, 0.75, 0.50 m.  Blank distance = finish.
+  already saved (kept from before): 0.75, 1.25, 1.50, 1.53 m - only the missing distances are needed
+  tape distance now (m or cm, blank = later): 1.25
+  = 1.250 m (125.0 cm). Correct? [Y/n]: y
+[1;33m  note: already have a point at 1.25 m. Move the robot about 25 cm closer for the next one.[0m
+  saved: tape 1.250 m  z_plane 1.3386 m  std 4.7 mm  (60 frames, 78 px)
+  tape distance now (m or cm, blank = later): 
+calibration: d = 0.9724 z_plane -0.0389 m   residual RMS 34.8 mm   sigma(d) = 9.4 mm + 4.4 mm/m^2 d^2   (12 distances)
+  tape 1.500  z_plane 1.5602  std 10.99 mm  residual +21.8 mm
+  tape 1.500  z_plane 1.5623  std 7.50 mm  residual +19.8 mm
+  tape 1.500  z_plane 1.5490  std 22.78 mm  residual +32.7 mm
+  tape 1.530  z_plane 1.5548  std 29.98 mm  residual +57.1 mm
+  tape 1.500  z_plane 1.5612  std 22.58 mm  residual +20.9 mm
+  tape 1.500  z_plane 1.5626  std 27.13 mm  residual +19.6 mm
+  tape 1.250  z_plane 1.3403  std 28.85 mm  residual -14.4 mm
+  tape 1.500  z_plane 1.6401  std 11.50 mm  residual -55.9 mm
+  tape 1.250  z_plane 1.3457  std 39.51 mm  residual -19.6 mm
+  tape 0.750  z_plane 0.8129  std 2.48 mm  residual -1.5 mm
+  tape 1.500  z_plane 1.6525  std 7.31 mm  residual -67.9 mm
+  tape 1.250  z_plane 1.3386  std 4.74 mm  residual -12.7 mm
+[1;36mSTEP 3/5  warm-up runs (latency)[0m
+[1;36mstart distance 1.50 m, stop distance 0.50 m (reference: front of the chassis armour), latency 0.120 s[0m
+[1;33m
+=== warmup_01 ===[0m
+  Put the robot at the START mark (1.50 m, facing the tag). Start the phone video. ENTER = go, Ctrl-C = quit 
+  tag detected (15 frames): camera 1.572 m, filter 1.500 m -> approach
+  stop at t=9.52s: filter 0.503 m (estimate reached stop distance)
+  result: OK (estimate reached stop distance)  KF 0.5016 m (sigma 0.23 cm) | odom-only 0.3938 | camera-only 0.5066 | travel 1.106 m, roll-out 0.7 cm, 12.6 Hz
+[1;33m
+=== warmup_02 ===[0m
+  Put the robot at the START mark (1.50 m, facing the tag). Start the phone video. ENTER = go, Ctrl-C = quit 
+Exception in thread Thread-1 (_task):
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/threading.py", line 1073, in _bootstrap_inner
+    self.run()
+  File "/usr/lib/python3.12/threading.py", line 1010, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/ameen/rm_venv/lib/python3.12/site-packages/robomaster/conn.py", line 296, in _task
+    self._sock.sendto(buf, addr)
+OSError: [Errno 101] Network is unreachable
+2026-11-14 18:53:58,837 ERROR client.py:163 Client: send_sync_msg wait msg receiver:0900, cmdset:0x48, cmdid:0x04 timeout!
+2026-11-14 18:54:01,838 ERROR client.py:163 Client: send_sync_msg wait msg receiver:0900, cmdset:0x48, cmdid:0x03 timeout!
+[1;31m
+LINK TO THE ROBOT LOST (no camera frame for 6 s). The robot stops by itself.
+Wait until the laptop is back on the robot Wi-Fi (or use the USB cable: ./go.sh usb), then run ./go.sh again.
+Everything saved so far is kept: finished calibration points and trials are skipped automatically.[0m
+
+Script done on 2026-11-14 18:54:08+03:00 [COMMAND_EXIT_CODE="3"]

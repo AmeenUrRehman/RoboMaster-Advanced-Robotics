@@ -1,0 +1,56 @@
+Script started on 2026-11-14 18:01:57+03:00 [COMMAND="python -u run_trials.py session --conn ap" TERM="xterm-256color" TTY="/dev/pts/1" COLUMNS="80" LINES="24"]
+[1;36mSTEP 1/5  check[0m
+[1;36mconnecting to the robot (ap) ...[0m
+  connected, battery 93 %
+  calibration loaded: False (a=1.0000, b=+0.0000), latency 0.120 s (default)
+  frame    1: tag 3  z_plane 1.566 m  calibrated 1.566 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   11: tag 3  z_plane 1.563 m  calibrated 1.563 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   21: tag 3  z_plane 1.584 m  calibrated 1.584 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   31: tag 3  z_plane 1.584 m  calibrated 1.584 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   42: tag 3  z_plane 1.582 m  calibrated 1.582 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   52: tag 3  z_plane 1.547 m  calibrated 1.547 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   62: tag 3  z_plane 1.558 m  calibrated 1.558 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   72: tag 3  z_plane 1.549 m  calibrated 1.549 m  bearing +0.3 deg  side 68 px  img 1280x720
+  frame   82: tag 3  z_plane 1.551 m  calibrated 1.551 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   94: tag 3  z_plane 1.540 m  calibrated 1.540 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame  104: tag 3  z_plane 1.556 m  calibrated 1.556 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame  114: tag 3  z_plane 1.555 m  calibrated 1.555 m  bearing +0.3 deg  side 67 px  img 1280x720
+  115 frames in 8.0 s (14.3 fps), tag in 112 frames, z_plane mean 1.5574 m, std 17.4 mm
+  battery 93 %, yaw -1.0 deg
+  slow fallback detector used in 1 frames
+[1;32mCHECK OK[0m
+[1;36mSTEP 2/5  camera calibration[0m
+[1;36mconnecting to the robot (ap) ...[0m
+  connected, battery 93 %
+[1;33mPlace the robot at rest facing the tag; measure tag plane -> front of the chassis armour (centre line).[0m
+  Suggested distances: 1.50, 1.25, 1.00, 0.75, 0.50 m.  Blank distance = finish.
+  tape distance now (m or cm, blank = later): 1.5
+  = 1.500 m (150.0 cm). Correct? [Y/n]: Y
+  saved: tape 1.500 m  z_plane 1.5602 m  std 11.0 mm  (60 frames, 67 px)
+  tape distance now (m or cm, blank = later): 
+need at least 3 calibration distances, found 1 in /home/ameen/robomasters/assignment3/logs/calib_raw.csv
+[1;36mSTEP 3/5  warm-up runs (latency)[0m
+[1;31mWARNING: config/calib.json missing - camera offset unknown. Run "python run_trials.py calib" first.[0m
+  continue anyway? [y/N]: y
+[1;36mconnecting to the robot (ap) ...[0m
+2026-11-14 18:03:12,874 ERROR conn.py:345 SdkConnection: RECV TimeOut!
+2026-11-14 18:03:12,875 ERROR robot.py:1355 Robot: Connection Failed, Please Check Hareware Connections!!! conn_type ap, host ('0.0.0.0', 10481), target ('192.168.2.1', 20020).
+2026-11-14 18:03:12,875 ERROR client.py:70 Client: __init__, create Connection, exception: module 'robomaster.config' has no attribute 'DEFAULT_CONN_PROTO'
+2026-11-14 18:03:12,878 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:03:12,879 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:03:12,879 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:03:12,879 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:03:12,879 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+Robot: Can not connect to robot, check connection please.
+Traceback (most recent call last):
+  File "/home/ameen/rm_venv/lib/python3.12/site-packages/robomaster/client.py", line 93, in remote_addr
+    return self._conn.target_addr
+           ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'target_addr'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ameen/robomasters/assignment3/run_trials.py", line 304, in <module>
+    main()
+  File "/home/ameen/robomasters/as

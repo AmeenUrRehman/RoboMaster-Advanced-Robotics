@@ -1,0 +1,9 @@
+{
+  "latency_s": 0.015,
+  "rms_m": 0.007455249234840741,
+  "rms_at_zero_m": 0.00755354525859509,
+  "runs": [
+    "logs/warmup/warmup_03.csv",
+    "logs/warmup/warmup_05.csv"
+  ]
+}

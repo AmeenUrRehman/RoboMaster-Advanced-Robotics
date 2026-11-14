@@ -1,0 +1,41 @@
+Script started on 2026-11-14 18:49:00+03:00 [COMMAND="python -u run_trials.py session --conn ap" TERM="xterm-256color" TTY="/dev/pts/3" COLUMNS="80" LINES="24"]
+[1;36mSTEP 1/5  check[0m
+[1;36mconnecting to the robot (ap) ...[0m
+  connected, battery 65 %
+  calibration loaded: False (a=1.0000, b=+0.0000), latency 0.120 s (default)
+  frame    1: tag 3  z_plane 0.813 m  calibrated 0.813 m  bearing -1.5 deg  side 122 px  img 1280x720
+  frame   11: tag 3  z_plane 0.813 m  calibrated 0.813 m  bearing -1.5 deg  side 123 px  img 1280x720
+  frame   21: tag 3  z_plane 0.814 m  calibrated 0.814 m  bearing -1.5 deg  side 122 px  img 1280x720
+  frame   31: tag 3  z_plane 0.810 m  calibrated 0.810 m  bearing -1.5 deg  side 122 px  img 1280x720
+  frame   41: tag 3  z_plane 0.810 m  calibrated 0.810 m  bearing -1.5 deg  side 122 px  img 1280x720
+  frame   51: tag 3  z_plane 0.813 m  calibrated 0.813 m  bearing -1.5 deg  side 123 px  img 1280x720
+  frame   61: tag 3  z_plane 0.817 m  calibrated 0.817 m  bearing -1.5 deg  side 122 px  img 1280x720
+  frame   71: tag 3  z_plane 0.818 m  calibrated 0.818 m  bearing -1.5 deg  side 122 px  img 1280x720
+  frame   81: tag 3  z_plane 0.812 m  calibrated 0.812 m  bearing -1.5 deg  side 122 px  img 1280x720
+  frame   91: tag 3  z_plane 0.814 m  calibrated 0.814 m  bearing -1.5 deg  side 122 px  img 1280x720
+  frame  101: tag 3  z_plane 0.803 m  calibrated 0.803 m  bearing -1.5 deg  side 123 px  img 1280x720
+  frame  111: tag 3  z_plane 0.813 m  calibrated 0.813 m  bearing -1.5 deg  side 122 px  img 1280x720
+  frame  121: tag 3  z_plane 0.811 m  calibrated 0.811 m  bearing -1.5 deg  side 122 px  img 1280x720
+  frame  131: tag 3  z_plane 0.804 m  calibrated 0.804 m  bearing -1.5 deg  side 122 px  img 1280x720
+  frame  141: tag 3  z_plane 0.818 m  calibrated 0.818 m  bearing -1.5 deg  side 122 px  img 1280x720
+  frame  151: tag 3  z_plane 0.817 m  calibrated 0.817 m  bearing -1.5 deg  side 122 px  img 1280x720
+  157 frames in 8.0 s (19.6 fps), tag in 157 frames, z_plane mean 0.8128 m, std 3.5 mm
+  battery 65 %, yaw 3.3 deg
+  slow fallback detector used in 0 frames
+[1;32mCHECK OK[0m
+[1;36mSTEP 2/5  camera calibration[0m
+[1;33mPlace the robot at rest facing the tag; measure tag plane -> front of the chassis armour (centre line).[0m
+  Suggested distances: 1.50, 1.25, 1.00, 0.75, 0.50 m.  Blank distance = finish.
+  already saved (kept from before): 1.25, 1.50, 1.53 m - only the missing distances are needed
+  tape distance now (m or cm, blank = later): 0.75
+  = 0.750 m (75.0 cm). Correct? [Y/n]: Y
+  saved: tape 0.750 m  z_plane 0.8129 m  std 2.5 mm  (60 frames, 122 px)
+  tape distance now (m or cm, blank = later): 1.25
+  = 1.250 m (125.0 cm). Correct? [Y/n]: Y
+[1;33m  note: already have a point at 1.25 m. Move the robot about 25 cm closer for the next one.[0m
+[1;31m
+LINK TO THE ROBOT LOST (no camera frame for 6 s). The robot stops by itself.
+Wait until the laptop is back on the robot Wi-Fi (or use the USB cable: ./go.sh usb), then run ./go.sh again.
+Everything saved so far is kept: finished calibration points and trials are skipped automatically.[0m
+
+Script done on 2026-11-14 18:49:49+03:00 [COMMAND_EXIT_CODE="3"]

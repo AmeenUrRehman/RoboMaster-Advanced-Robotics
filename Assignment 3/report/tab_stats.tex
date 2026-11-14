@@ -1,0 +1,18 @@
+\begin{tabular}{@{}lrrr@{}}\toprule
+Statistic (mm unless stated) & Fused KF & Odometry only & Camera only\\\midrule
+Trials $n$ & 10 & 10 & 10\\
+Mean error (bias) $\bar e$ & +21.0 & +11.9 & +22.3\\
+Standard deviation $s$ & 14.7 & 35.2 & 15.0\\
+Mean absolute error (MAE) & 21.0 & 31.3 & 22.3\\
+Root mean square error (RMSE) & 25.2 & 35.5 & 26.4\\
+Median error & +17.2 & +16.1 & +18.0\\
+Minimum error & +4.5 & -33.3 & +4.9\\
+Maximum error & +43.9 & +68.0 & +45.9\\
+Range of errors $e_{max}-e_{min}$ & 39.4 & 101.2 & 41.0\\
+Largest $|e_i|$ & 43.9 & 68.0 & 45.9\\
+95\,\% CI of the bias & [+10.5, +31.5] & [-13.3, +37.1] & [+11.5, +33.0]\\
+$t$-test $H_0{:}\ \bar e=0$, $p$ & 0.001 & 0.314 & 0.001\\
+Shapiro--Wilk normality, $p$ & 0.230 & 0.536 & 0.235\\
+\midrule
+Wilcoxon $|e_{KF}|$ vs $|e|$ of this method, $p$ & -- & 0.064 & 0.010\\
+\bottomrule\end{tabular}

@@ -1,0 +1,57 @@
+Script started on 2026-11-14 19:05:04+03:00 [COMMAND="python -u run_trials.py session --conn ap" TERM="xterm-256color" TTY="/dev/pts/1" COLUMNS="80" LINES="24"]
+[1;36mSTEP 1/5  check[0m
+[1;36mconnecting to the robot (ap) ...[0m
+  connected, battery 55 %
+  calibration loaded: True (a=0.9724, b=-0.0389), latency 0.120 s (default)
+  frame    1: tag 3  z_plane 1.553 m  calibrated 1.471 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame   11: tag 3  z_plane 1.549 m  calibrated 1.468 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame   21: tag 3  z_plane 1.554 m  calibrated 1.472 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame   31: tag 3  z_plane 1.535 m  calibrated 1.454 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame   41: tag 3  z_plane 1.527 m  calibrated 1.446 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame   51: tag 3  z_plane 1.550 m  calibrated 1.469 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame   61: tag 3  z_plane 1.542 m  calibrated 1.461 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame   71: tag 3  z_plane 1.543 m  calibrated 1.461 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame   81: tag 3  z_plane 1.564 m  calibrated 1.482 m  bearing +0.8 deg  side 69 px  img 1280x720
+  frame   91: tag 3  z_plane 1.546 m  calibrated 1.464 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  101: tag 3  z_plane 1.544 m  calibrated 1.463 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  111: tag 3  z_plane 1.564 m  calibrated 1.482 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  121: tag 3  z_plane 1.551 m  calibrated 1.469 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  131: tag 3  z_plane 1.543 m  calibrated 1.461 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  142: tag 3  z_plane 1.511 m  calibrated 1.430 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  152: tag 3  z_plane 1.522 m  calibrated 1.441 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  162: tag 3  z_plane 1.538 m  calibrated 1.457 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  173: tag 3  z_plane 1.466 m  calibrated 1.387 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  183: tag 3  z_plane 1.555 m  calibrated 1.473 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  193: tag 3  z_plane 1.547 m  calibrated 1.465 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  203: tag 3  z_plane 1.498 m  calibrated 1.418 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  213: tag 3  z_plane 1.541 m  calibrated 1.459 m  bearing +0.8 deg  side 68 px  img 1280x720
+  frame  223: tag 3  z_plane 1.543 m  calibrated 1.461 m  bearing +0.8 deg  side 68 px  img 1280x720
+  228 frames in 8.0 s (28.4 fps), tag in 226 frames, z_plane mean 1.5397 m, std 14.9 mm
+  battery 55 %, yaw -1.1 deg
+  slow fallback detector used in 2 frames
+[1;32mCHECK OK[0m
+[1;36mSTEP 2/5  camera calibration[0m
+  calibration exists. Redo it? [y/N]: n
+[1;36mSTEP 3/5  warm-up runs (latency)[0m
+  1 warm-up run(s) already finished and kept, 1 to go
+[1;36mstart distance 1.50 m, stop distance 0.50 m (reference: front of the chassis armour), latency 0.120 s[0m
+[1;33m
+=== warmup_05 ===[0m
+  Put the robot at the START mark (1.50 m, facing the tag). Start the phone video. ENTER = go, Ctrl-C = quit 
+  tag detected (15 frames): camera 1.462 m, filter 1.464 m -> approach
+  stop at t=8.27s: filter 0.503 m (estimate reached stop distance)
+  result: OK (estimate reached stop distance)  KF 0.4997 m (sigma 0.15 cm) | odom-only 0.5272 | camera-only 0.5041 | travel 0.973 m, roll-out 0.9 cm, 26.3 Hz
+latency estimate from 2 run(s): L = 0.015 s  (residual RMS 7.5 mm; at L=0: 7.6 mm)
+  written to /home/ameen/robomasters/assignment3/config/latency.json
+[1;36mSTEP 4/5  measured trials[0m
+[1;36mstart distance 1.50 m, stop distance 0.50 m (reference: front of the chassis armour), latency 0.015 s[0m
+[1;33m
+=== trial_01 ===[0m
+  Put the robot at the START mark (1.50 m, facing the tag). Start the phone video. ENTER = go, Ctrl-C = quit 
+2026-11-14 19:05:47,490 ERROR client.py:163 Client: send_sync_msg wait msg receiver:0900, cmdset:0x48, cmdid:0x04 timeout!
+[1;31m
+LINK TO THE ROBOT LOST (no camera frame for 6 s). The robot stops by itself.
+Wait until the laptop is back on the robot Wi-Fi (or use the USB cable: ./go.sh usb), then run ./go.sh again.
+Everything saved so far is kept: finished calibration points and trials are skipped automatically.[0m
+
+Script done on 2026-11-14 19:05:56+03:00 [COMMAND_EXIT_CODE="3"]

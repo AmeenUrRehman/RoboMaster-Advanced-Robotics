@@ -1,0 +1,57 @@
+Script started on 2026-11-14 18:06:15+03:00 [COMMAND="python -u run_trials.py session --conn ap" TERM="xterm-256color" TTY="/dev/pts/5" COLUMNS="80" LINES="24"]
+[1;36mSTEP 1/5  check[0m
+[1;36mconnecting to the robot (ap) ...[0m
+  connected, battery 90 %
+  calibration loaded: False (a=1.0000, b=+0.0000), latency 0.120 s (default)
+  frame    1: tag 3  z_plane 1.587 m  calibrated 1.587 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   11: tag 3  z_plane 1.581 m  calibrated 1.581 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   21: tag 3  z_plane 1.581 m  calibrated 1.581 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   31: tag 3  z_plane 1.577 m  calibrated 1.577 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   41: tag 3  z_plane 1.552 m  calibrated 1.552 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   51: tag 3  z_plane 1.594 m  calibrated 1.594 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   61: tag 3  z_plane 1.579 m  calibrated 1.579 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   71: tag 3  z_plane 1.526 m  calibrated 1.526 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   81: tag 3  z_plane 1.572 m  calibrated 1.572 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame   91: tag 3  z_plane 1.578 m  calibrated 1.578 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame  101: tag 3  z_plane 1.554 m  calibrated 1.554 m  bearing +0.4 deg  side 67 px  img 1280x720
+  frame  111: tag 3  z_plane 1.560 m  calibrated 1.560 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame  121: tag 3  z_plane 1.559 m  calibrated 1.559 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame  131: tag 3  z_plane 1.545 m  calibrated 1.545 m  bearing +0.3 deg  side 67 px  img 1280x720
+  frame  141: tag 3  z_plane 1.555 m  calibrated 1.555 m  bearing +0.3 deg  side 67 px  img 1280x720
+  150 frames in 8.0 s (18.7 fps), tag in 150 frames, z_plane mean 1.5649 m, std 19.1 mm
+  battery 90 %, yaw -1.0 deg
+  slow fallback detector used in 1 frames
+[1;32mCHECK OK[0m
+[1;36mSTEP 2/5  camera calibration[0m
+[1;36mconnecting to the robot (ap) ...[0m
+  connected, battery 90 %
+[1;33mPlace the robot at rest facing the tag; measure tag plane -> front of the chassis armour (centre line).[0m
+  Suggested distances: 1.50, 1.25, 1.00, 0.75, 0.50 m.  Blank distance = finish.
+  tape distance now (m or cm, blank = later): 1.50 m
+  not a number, try again
+  tape distance now (m or cm, blank = later): 1.50
+  = 1.500 m (150.0 cm). Correct? [Y/n]: Y
+  saved: tape 1.500 m  z_plane 1.5490 m  std 22.8 mm  (60 frames, 67 px)
+  tape distance now (m or cm, blank = later): 1.53
+  = 1.530 m (153.0 cm). Correct? [Y/n]: Y
+  saved: tape 1.530 m  z_plane 1.5548 m  std 30.0 mm  (60 frames, 68 px)
+  tape distance now (m or cm, blank = later): 1.51
+  = 1.510 m (151.0 cm). Correct? [Y/n]: Y
+
+Exception in thread Thread-18 (_task):
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/threading.py", line 1073, in _bootstrap_inner
+    self.run()
+  File "/usr/lib/python3.12/threading.py", line 1010, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/ameen/rm_venv/lib/python3.12/site-packages/robomaster/conn.py", line 296, in _task
+    self._sock.sendto(buf, addr)
+OSError: [Errno 101] Network is unreachable
+[1;31m  only 1 detections - not saved, fix the view and repeat[0m
+  tape distance now (m or cm, blank = later): 2026-11-14 18:11:28,904 ERROR client.py:163 Client: send_sync_msg wait msg receiver:0900, cmdset:0x48, cmdid:0x04 timeout!
+2026-11-14 18:11:31,905 ERROR client.py:163 Client: send_sync_msg wait msg receiver:0900, cmdset:0x48, cmdid:0x04 timeout!
+2026-11-14 18:11:34,908 ERROR client.py:163 Client: send_sync_msg wait msg receiver:0100, cmdset:0x3f, cmdid:0xd2 timeout!
+2026-11-14 18:11:37,911 ERROR client.py:163 Client: send_sync_msg wait msg receiver:0100, cmdset:0x3f, cmdid:0xd2 timeout!
+2026-11-14 18:11:40,912 ERROR client.py:163 Client: send_sync_msg wait msg receiver:0900, cmdset:0x3f, cmdid:0xd1 timeout!
+
+Script done on 2026-11-14 18:13:55+03:00 [COMMAND_EXIT_CODE="0"]

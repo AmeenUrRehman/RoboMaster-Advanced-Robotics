@@ -1,0 +1,38 @@
+Script started on 2026-11-14 18:13:55+03:00 [COMMAND="python -u run_trials.py session --conn ap" TERM="xterm-256color" TTY="/dev/pts/5" COLUMNS="80" LINES="24"]
+[1;36mSTEP 1/5  check[0m
+[1;36mconnecting to the robot (ap) ...[0m
+2026-11-14 18:14:01,760 ERROR conn.py:345 SdkConnection: RECV TimeOut!
+2026-11-14 18:14:01,760 ERROR robot.py:1355 Robot: Connection Failed, Please Check Hareware Connections!!! conn_type ap, host ('0.0.0.0', 10333), target ('192.168.2.1', 20020).
+2026-11-14 18:14:01,760 ERROR client.py:70 Client: __init__, create Connection, exception: module 'robomaster.config' has no attribute 'DEFAULT_CONN_PROTO'
+2026-11-14 18:14:01,766 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:14:01,767 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:14:01,767 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:14:01,767 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:14:01,767 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+Robot: Can not connect to robot, check connection please.
+[1;31m  connection failed: exceptions must derive from BaseException[0m
+[1;36mconnecting to the robot (ap) ... attempt 2/3[0m
+2026-11-14 18:14:11,774 ERROR conn.py:345 SdkConnection: RECV TimeOut!
+2026-11-14 18:14:11,774 ERROR robot.py:1355 Robot: Connection Failed, Please Check Hareware Connections!!! conn_type ap, host ('0.0.0.0', 10384), target ('192.168.2.1', 20020).
+2026-11-14 18:14:11,774 ERROR client.py:70 Client: __init__, create Connection, exception: module 'robomaster.config' has no attribute 'DEFAULT_CONN_PROTO'
+2026-11-14 18:14:11,781 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:14:11,782 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:14:11,782 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:14:11,782 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:14:11,782 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+Robot: Can not connect to robot, check connection please.
+[1;31m  connection failed: exceptions must derive from BaseException[0m
+[1;36mconnecting to the robot (ap) ... attempt 3/3[0m
+2026-11-14 18:14:21,788 ERROR conn.py:345 SdkConnection: RECV TimeOut!
+2026-11-14 18:14:21,788 ERROR robot.py:1355 Robot: Connection Failed, Please Check Hareware Connections!!! conn_type ap, host ('0.0.0.0', 10478), target ('192.168.2.1', 20020).
+2026-11-14 18:14:21,788 ERROR client.py:70 Client: __init__, create Connection, exception: module 'robomaster.config' has no attribute 'DEFAULT_CONN_PROTO'
+2026-11-14 18:14:21,795 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:14:21,795 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:14:21,796 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:14:21,796 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+2026-11-14 18:14:21,796 ERROR client.py:153 Client: send_sync_msg, client recv_task is not running.
+Robot: Can not connect to robot, check connection please.
+[1;31m  connection failed: exceptions must derive from BaseException[0m
+[1;31mRobot not reachable. Turn the robot off and on, check the Wi-Fi, run ./go.sh again.[0m
+
+Script done on 2026-11-14 18:14:21+03:00 [COMMAND_EXIT_CODE="1"]

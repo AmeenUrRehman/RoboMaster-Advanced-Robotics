@@ -1,0 +1,9 @@
+$ python scripts/analyze.py
+10 trials used, 0 excluded (none)
+start 1.50 m, stop target 0.50 m; tape final distance 0.4718 m +/- 16.0 mm (SD), 0.4500 .. 0.4920 m
+method            bias     SD    MAE   RMSE     min     max  range   (mm)
+Fused KF         +21.0   14.7   21.0   25.2    +4.5   +43.9   39.4
+Odometry only    +11.9   35.2   31.3   35.5   -33.3   +68.0  101.2
+Camera only      +22.3   15.0   22.3   26.4    +4.9   +45.9   41.0
+KF bias 95% CI +10.5 .. +31.5 mm, t-test p = 0.001, Shapiro-Wilk p = 0.230; Wilcoxon |e_KF| vs |e_odom| p = 0.064
+KF MAE is 33% lower than odometry-only; 0% of trials inside +/-2 sigma_KF; loop 22.3 Hz, tag seen in 100% of loops

@@ -1,0 +1,13 @@
+Script started on 2026-11-14 18:51:43+03:00 [COMMAND="python -u run_trials.py session --conn ap" TERM="xterm-256color" TTY="/dev/pts/3" COLUMNS="80" LINES="24"]
+[1;36mSTEP 1/5  check[0m
+[1;36mconnecting to the robot (ap) ...[0m
+2026-11-14 18:51:47,369 ERROR client.py:163 Client: send_sync_msg wait msg receiver:0100, cmdset:0x3f, cmdid:0xd2 timeout!
+2026-11-14 18:51:47,370 ERROR camera.py:285 Camera: start_video_stream, stream_sdk(1) failed!
+  connected, battery 64 %
+  calibration loaded: False (a=1.0000, b=+0.0000), latency 0.120 s (default)
+[1;31m
+LINK TO THE ROBOT LOST (no camera frame for 6 s). The robot stops by itself.
+Wait until the laptop is back on the robot Wi-Fi (or use the USB cable: ./go.sh usb), then run ./go.sh again.
+Everything saved so far is kept: finished calibration points and trials are skipped automatically.[0m
+
+Script done on 2026-11-14 18:51:50+03:00 [COMMAND_EXIT_CODE="3"]
