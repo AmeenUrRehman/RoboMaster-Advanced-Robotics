@@ -253,13 +253,11 @@ Tape distance $d_i$ & tape measure & once per trial & ground truth for the error
 Procedure: (1) \texttt{run\_trials.py check}: link, battery, camera and tag detection at rest; (2) \texttt{calib}: robot at rest at five tape-measured distances, 60 frames each, then Eq.~\eqref{eq:calib} is fitted; (3) \texttt{warmup}: two full runs that are \emph{not} part of the results, used to estimate the latency $L$ (Section~\ref{sec:lat}); (4) \texttt{trials}: ten trials. After each trial the robot is left exactly where it stopped, the distance from the tag plane to the reference point is measured with a steel tape (resolution 1\,mm) along the floor, and the value is typed into the program, which writes it next to the estimates in \texttt{logs/trials.csv}. The estimate is printed before the tape is read, but it is not used to take the measurement. Four earlier runs are not in the results and are kept in \texttt{logs/trials\_invalid/}: in three of them the tag stand had shifted, so the tape was read from a zero line no longer under the tag (the camera saw the robot stop at the same place, within 4\,mm, while the tape readings fell from 47 to 40\,cm); in the fourth the robot was not on the start mark and drove into the stand. A start-position check (camera within 10\,cm of $d_0$, otherwise the robot does not move) was added after that run.
 
 \subsection{Camera calibration result}
-\begin{center}
-\begin{minipage}{0.47\linewidth}\centering\small
+\begin{center}\small
 \tabortodo{tab_calib.tex}{calibration table (run \texttt{calib})}
-\end{minipage}\hfill
-\begin{minipage}{0.5\linewidth}\centering
-\figorti{../figures/fig_calib.png}{1.0}{calibration figure}
-\end{minipage}
+
+\vspace{6pt}
+\figorti{../figures/fig_calib.png}{0.85}{calibration figure}
 \end{center}
 Fit: $a=\CalA$, $b=\CalB$\,m, residual RMS \CalRMS\,mm; noise model $\sigma_z=\CalCzero\,\text{mm}+\CalCone\,\text{mm/m}^2\,z^2$.
 

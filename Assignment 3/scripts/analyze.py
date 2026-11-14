@@ -76,8 +76,10 @@ def zoom_window(ax, tr, row, seconds=3.0):
     tape = fnum(row.get('tape_m'))
     if tape is not None:
         vals.append(np.array([tape]))
-    v = np.concatenate([x[~np.isnan(x)] for x in vals])
+    v = np.concatenate([x[~np.isnan(x)] for x in vals[:3]])
     lo, hi = np.percentile(v, 1), np.percentile(v, 99)
+    if tape is not None:            # the tape star must always be inside the window
+        lo, hi = min(lo, tape), max(hi, tape)
     pad = max(0.004, 0.15 * (hi - lo))
     ax.set_xlim(t0, t1)
     ax.set_ylim(lo - pad, hi + pad)
@@ -204,7 +206,11 @@ def main():
     ax1.plot([lo, hi], [lo, hi], color=MUTED, lw=0.9, label='ideal $\\hat d = d$')
     for k, lab, c, m in METHODS:
         tk = np.array([float(r['tape_m']) for r in rows if fnum(r.get(f'est_{k}')) is not None])
-        ax1.scatter(tk, D[k], s=42, color=c, marker=m, edgecolors='white', lw=0.8, label=lab, zorder=3)
+        if k == 'cam':   # hollow and larger: the camera and fused points nearly coincide
+            ax1.scatter(tk, D[k], s=70, facecolors='none', edgecolors=c, marker=m, lw=1.3, label=lab, zorder=4)
+        else:
+            ax1.scatter(tk, D[k], s=34 if k == 'kf' else 42, color=c, marker=m, edgecolors='white', lw=0.8,
+                        label=lab, zorder=3)
     ax1.set_xlabel('measured final distance $d_i$ (m, tape)')
     ax1.set_ylabel('estimated final distance $\\hat d_i$ (m)')
     ax1.set_xlim(lo, hi), ax1.set_ylim(lo, hi), ax1.set_aspect('equal')
